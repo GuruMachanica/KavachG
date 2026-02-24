@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: kavachg-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - kavachg-network
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=kavachg_admin_pwd
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: kavachg-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - JWT_SECRET=kavachg_jwt_secret
+      - MONGODB_URI=mongodb://admin:kavachg_admin_pwd@mongodb:27017/safety_monitoring?authSource=admin
+    depends_on:
+      - mongodb
+    networks:
+      - kavachg-network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./FrontEnd/FrontEnd
+      dockerfile: Dockerfile.frontend
+    container_name: kavachg-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - kavachg-network
+    restart: unless-stopped
+    volumes:
+      - ./FrontEnd/FrontEnd:/app
+      - /app/node_modules
+
+  ml-system:
+    build:
+      context: ./ML
+      dockerfile: Dockerfile.ml
+    container_name: kavachg-ml-system
+    environment:
+      - MONGODB_URI=mongodb://admin:kavachg_admin_pwd@mongodb:27017/safety_monitoring?authSource=admin
+      - BACKEND_URL=http://backend:5000
+    volumes:
+      - ./ML:/app
+      - ml-models:/app/models
+    depends_on:
+      - mongodb
+      - backend
+    networks:
+      - kavachg-network
+    restart: unless-stopped
+    # Note: ML system with camera access might need additional privileges
+    # Uncomment if camera access is needed inside container:
+    # devices:
+    #   - /dev/video0:/dev/video0
+
+networks:
+  kavachg-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  ml-models: 

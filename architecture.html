@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>KavachG System Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #0ea5e9;
+            text-align: center;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+        }
+        .description {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .component {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .component h3 {
+            margin-top: 0;
+            color: #0284c7;
+        }
+    </style>
+</head>
+<body>
+    <h1>KavachG Safety Monitoring System Architecture</h1>
+    
+    <div class="mermaid">
+        graph TB
+            subgraph "ML System"
+                Video["Video Sources<br>(Cameras/Files)"] --> ML["Safety Detection Models"]
+                ML --> Analyzer["Incident Analyzer"]
+                Analyzer --> DBClient["MongoDB Client"]
+            end
+            
+            subgraph "Backend"
+                API["Express API Server"] --> Auth["Authentication<br>(JWT)"]
+                API --> Controllers["Controllers"]
+                Controllers --> Models["Data Models"]
+                Models --> DB["Database<br>(SQLite/MongoDB)"]
+            end
+            
+            subgraph "Frontend"
+                Dashboard["Dashboard UI"] --> Components["UI Components"]
+                Components --> Services["API Services"]
+                Services --> AuthService["Auth Service"]
+            end
+            
+            Analyzer --> |"API Calls"| API
+            Services --> |"HTTP Requests"| API
+            
+            style ML fill:#f9d9eb,stroke:#d14081
+            style API fill:#d1e7f9,stroke:#0284c7
+            style Dashboard fill:#d9f9e6,stroke:#0ea5e9
+    </div>
+    
+    <div class="description">
+        <p>The KavachG Safety Monitoring System consists of three main components that work together to provide a comprehensive workplace safety solution:</p>
+        
+        <div class="component">
+            <h3>ML System</h3>
+            <p>The ML component processes video streams to detect safety incidents:</p>
+            <ul>
+                <li><strong>Video Sources</strong>: Live camera feeds or pre-recorded files</li>
+                <li><strong>Safety Detection Models</strong>: Fire detection, PPE detection, and fall detection models</li>
+                <li><strong>Incident Analyzer</strong>: Processes detection results and determines incident severity</li>
+                <li><strong>MongoDB Client</strong>: Stores incident data with timestamps, images, and metadata</li>
+            </ul>
+        </div>
+        
+        <div class="component">
+            <h3>Backend</h3>
+            <p>The backend provides API endpoints for data management and authentication:</p>
+            <ul>
+                <li><strong>Express API Server</strong>: RESTful API server built on Node.js</li>
+                <li><strong>Authentication</strong>: JWT-based authentication and role-based access control</li>
+                <li><strong>Controllers</strong>: Handle API requests for incidents, users, and statistics</li>
+                <li><strong>Data Models</strong>: Define data structures for incidents and users</li>
+                <li><strong>Database</strong>: Stores system data (SQLite for simple deployment, MongoDB for production)</li>
+            </ul>
+        </div>
+        
+        <div class="component">
+            <h3>Frontend</h3>
+            <p>The frontend provides the user interface for monitoring and management:</p>
+            <ul>
+                <li><strong>Dashboard UI</strong>: Main interface built with HTML/CSS/JavaScript and Tailwind CSS</li>
+                <li><strong>UI Components</strong>: Charts, tables, alerts, and forms for user interaction</li>
+                <li><strong>API Services</strong>: JavaScript modules for communicating with the backend API</li>
+                <li><strong>Auth Service</strong>: Handles user authentication and session management</li>
+            </ul>
+        </div>
+        
+        <p><strong>Communication Flow</strong>: The ML system detects incidents and sends them to the backend API. The frontend dashboard queries the backend API to display incident data and allows users to manage the system.</p>
+    </div>
+    
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+    </script>
+</body>
+</html> 

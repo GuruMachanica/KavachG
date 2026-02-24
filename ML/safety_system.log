@@ -1,0 +1,3 @@
+2025-04-24 00:08:02,197 - INFO - Connected to MongoDB for sector: Area-1
+2025-04-24 00:08:02,198 - ERROR - Model initialization failed: No module named 'models'
+2025-04-24 00:08:02,787 - INFO - Safety system shutdown complete

@@ -1,0 +1,12 @@
+For PPE kit
+yolo task=detect mode=predict model=models/best.pt source=C:\Desktop\Hackathon\sample_test\Construct.mp4 save=True
+
+
+For Fire and Smoke
+
+python detect.py --weights C:\Desktop\Hackathon\yolov5-fire-detection\models\FinalFireSmoke\weights\best.pt --img 640 --conf 0.25 --source C:\Desktop\Hackathon\sample_test\Fire.mp4
+
+
+For Fall
+
+python detect_video.py

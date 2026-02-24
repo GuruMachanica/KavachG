@@ -1,0 +1,47 @@
+2025-04-24 01:20:15,595 - INFO - Starting setup process...
+2025-04-24 01:20:15,596 - INFO - Python version check passed: 3.10.10 (tags/v3.10.10:aad5f6a, Feb  7 2023, 17:20:36) [MSC v.1929 64 bit (AMD64)]
+2025-04-24 01:20:15,597 - INFO - Created directory: logs
+2025-04-24 01:20:15,597 - INFO - Created directory: detections
+2025-04-24 01:20:15,598 - INFO - Created directory: detections/fire
+2025-04-24 01:20:15,598 - INFO - Created directory: detections/fall
+2025-04-24 01:20:15,599 - INFO - Created directory: models
+2025-04-24 01:20:15,600 - INFO - Installing Python requirements...
+2025-04-24 01:20:20,523 - INFO - Installed torch>=1.7.0
+2025-04-24 01:20:21,978 - INFO - Installed torchvision>=0.8.1
+2025-04-24 01:20:23,405 - INFO - Installed opencv-python>=4.5.0
+2025-04-24 01:20:24,845 - INFO - Installed pymongo>=3.11.0
+2025-04-24 01:20:26,256 - INFO - Installed numpy>=1.19.0
+2025-04-24 01:20:27,696 - INFO - Installed pydantic>=1.8.0
+2025-04-24 01:20:29,128 - INFO - Installed python-dotenv>=0.19.0
+2025-04-24 01:20:29,130 - INFO - Created .env configuration file
+2025-04-24 01:20:30,822 - INFO - Setup completed successfully!
+2025-04-24 01:27:37,172 - INFO - Starting environment setup...
+2025-04-24 01:27:37,173 - INFO - Created directory: logs
+2025-04-24 01:27:37,174 - INFO - Created directory: detections
+2025-04-24 01:27:37,174 - INFO - Created directory: models
+2025-04-24 01:27:37,175 - INFO - Installing required packages...
+2025-04-24 01:29:29,155 - INFO - Successfully installed required packages
+2025-04-24 01:29:29,156 - INFO - Environment setup completed successfully!
+2025-04-24 01:29:29,156 - INFO - 
+You can now run the safety system using:
+2025-04-24 01:29:29,157 - INFO - python incident_tracker/run_safety_system.py --source sample_test/Fire.mp4 --show
+2025-04-24 08:14:14,715 - INFO - Starting environment setup...
+2025-04-24 08:14:14,716 - INFO - Created directory: logs
+2025-04-24 08:14:14,717 - INFO - Created directory: detections
+2025-04-24 08:14:14,717 - INFO - Created directory: models
+2025-04-24 08:14:14,717 - INFO - Installing required packages...
+2025-04-24 08:16:11,709 - INFO - Successfully installed required packages
+2025-04-24 08:16:11,710 - INFO - Environment setup completed successfully!
+2025-04-24 08:16:11,710 - INFO - 
+You can now run the safety system using:
+2025-04-24 08:16:11,710 - INFO - python incident_tracker/run_safety_system.py --source sample_test/Fire.mp4 --show
+2025-04-24 08:17:28,962 - INFO - Starting environment setup...
+2025-04-24 08:17:28,963 - INFO - Created directory: logs
+2025-04-24 08:17:28,963 - INFO - Created directory: detections
+2025-04-24 08:17:28,963 - INFO - Created directory: models
+2025-04-24 08:17:28,963 - INFO - Installing required packages...
+2025-04-24 08:17:31,594 - INFO - Successfully installed required packages
+2025-04-24 08:17:31,594 - INFO - Environment setup completed successfully!
+2025-04-24 08:17:31,594 - INFO - 
+You can now run the safety system using:
+2025-04-24 08:17:31,594 - INFO - python incident_tracker/run_safety_system.py --source sample_test/Fire.mp4 --show

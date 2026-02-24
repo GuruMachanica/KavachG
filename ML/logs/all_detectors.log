@@ -1,0 +1,13 @@
+2025-04-24 07:00:25,336 - INFO - Starting All-In-One Detector for sector: bsnl-site
+2025-04-24 07:00:25,341 - INFO - Connected to MongoDB at mongodb://localhost:27017/
+2025-04-24 07:00:30,014 - INFO - YOLOv5  2025-4-19 Python-3.10.11 torch-2.5.1+cu118 CUDA:0 (NVIDIA GeForce RTX 4050 Laptop GPU, 6140MiB)
+
+2025-04-24 07:00:30,274 - INFO - Fusing layers... 
+2025-04-24 07:00:30,717 - INFO - Model summary: 213 layers, 7015519 parameters, 0 gradients, 15.8 GFLOPs
+2025-04-24 07:00:30,721 - INFO - Fire detection model loaded
+2025-04-24 07:00:30,785 - INFO - Fusing layers... 
+2025-04-24 07:00:30,935 - INFO - Model summary: 213 layers, 7018216 parameters, 0 gradients, 15.8 GFLOPs
+2025-04-24 07:00:30,980 - INFO - Fall detection model loaded
+2025-04-24 07:00:30,981 - WARNING - PPE detection model not found
+2025-04-24 07:00:30,982 - INFO - AllInOneDetector initialized for sector: bsnl-site
+2025-04-24 07:00:31,063 - INFO - Detector shutdown complete
