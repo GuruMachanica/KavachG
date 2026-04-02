@@ -11,6 +11,7 @@ from model_runtime import sleep_model
 from ppe_model import detect_ppe
 from fire_smoke_model import detect_fire_smoke
 from fall_model import detect_fall
+from pose_model import detect_pose
 from incidents_storage import save_incident_clip
 import requests
 import os
@@ -37,11 +38,31 @@ def gen_live_detection(model_type):
     record_duration = 10  # seconds
     persistence_threshold = 5  # anomaly must persist for 5s
     max_buffer = int(fps * record_duration)
+    inactive_stream = False
     try:
         while True:
             # Sleep previous model streams when a new model is activated.
             if not is_active(model_type, session_id):
-                break
+                if not inactive_stream:
+                    sleep_model(model_type)
+                    inactive_stream = True
+
+                frame = get_frame(timeout_seconds=1.0)
+                if frame is None:
+                    continue
+
+                encoded, buffer = cv2.imencode(".jpg", frame)
+                if not encoded:
+                    continue
+                frame_bytes = buffer.tobytes()
+                yield (
+                    b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
+                    + frame_bytes
+                    + b"\r\n"
+                )
+                continue
+
+            inactive_stream = False
 
             frame = get_frame(timeout_seconds=1.0)
             if frame is None:
@@ -64,6 +85,13 @@ def gen_live_detection(model_type):
                     det.get("label", "").lower() in {"fall", "fallen"}
                     for det in detections
                 )
+            elif model_type == "pose":
+                try:
+                    detections = detect_pose(frame)
+                except Exception as e:  # noqa: BLE001
+                    print(f"Pose detection failed: {e}")
+                    detections = []
+                anomaly = False
             else:
                 detections = []
                 anomaly = False
@@ -83,6 +111,10 @@ def gen_live_detection(model_type):
                         (0, 255, 0),
                         2,
                     )
+                for point in det.get("keypoints", []):
+                    if len(point) >= 2:
+                        xk, yk = int(point[0]), int(point[1])
+                        cv2.circle(frame, (xk, yk), 3, (0, 180, 255), -1)
             now = time.time()
             if anomaly:
                 if anomaly_start is None:

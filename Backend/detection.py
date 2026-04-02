@@ -8,6 +8,7 @@ from ppe_model import detect_ppe, get_ppe_model
 from fire_smoke_model import detect_fire_smoke, get_fire_model
 from restricted_area_model import detect_restricted_area, restricted_model
 from fall_model import detect_fall, get_fall_model
+from pose_model import detect_pose, get_pose_model, get_pose_model_error
 
 router = APIRouter()
 
@@ -169,4 +170,22 @@ def detect_fall_api(file: UploadFile):
     if err:
         return err
     detections = detect_fall(img)
+    return {"detections": detections}
+
+
+@router.post("/detect/pose/")
+def detect_pose_api(file: UploadFile):
+    if not get_pose_model():
+        error_message = get_pose_model_error()
+        return JSONResponse(
+            {
+                "error": "Pose model not loaded."
+                + (f" {error_message}" if error_message else "")
+            },
+            status_code=500,
+        )
+    img, err = _decode_upload(file)
+    if err:
+        return err
+    detections = detect_pose(img)
     return {"detections": detections}

@@ -67,3 +67,11 @@ def live_fall():
         gen_live_detection("fall"),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )
+
+
+@router.get("/live/pose")
+def live_pose():
+    return StreamingResponse(
+        gen_live_detection("pose"),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )

@@ -7,6 +7,8 @@ const state = {
   sensitivity: 50,
   cameras: [],
   ws: null,
+  liveMode: "video_feed",
+  livePaused: false,
 };
 
 function esc(value) {
@@ -43,7 +45,11 @@ async function parseResponse(response) {
     payload = { detail: text || "Unknown error" };
   }
   if (!response.ok) {
-    throw new Error(payload.detail || payload.error || "Request failed");
+    const error = new Error(
+      payload.detail || payload.error || `Request failed (${response.status})`
+    );
+    error.status = response.status;
+    throw error;
   }
   return payload;
 }
@@ -157,6 +163,18 @@ function setTab(tabName) {
   document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
   document.getElementById(`tab-${tabName}`).classList.remove("hidden");
   document.querySelector(`[data-tab='${tabName}']`).classList.add("active");
+
+  if (tabName === "detection") {
+    const detectionTab = document.getElementById("tab-detection");
+    if (!detectionTab.innerHTML.trim()) {
+      renderDetection();
+      return;
+    }
+    const live = document.getElementById("live-view");
+    if (live && !state.livePaused && !live.src) {
+      live.src = `${API_BASE}/${state.liveMode}?t=${Date.now()}`;
+    }
+  }
 }
 
 function showApp() {
@@ -270,16 +288,17 @@ function renderDetection() {
           <select id="camera-select">${cameraOptions || `<option value="0">Default Camera</option>`}</select>
           <label>Mode</label>
           <select id="stream-mode">
-            <option value="video_feed">Raw Feed</option>
-            <option value="live/ppe">PPE</option>
-            <option value="live/fire-smoke">Fire/Smoke</option>
-            <option value="live/fall">Fall</option>
+            <option value="video_feed" ${state.liveMode === "video_feed" ? "selected" : ""}>Raw Feed</option>
+            <option value="live/ppe" ${state.liveMode === "live/ppe" ? "selected" : ""}>PPE</option>
+            <option value="live/fire-smoke" ${state.liveMode === "live/fire-smoke" ? "selected" : ""}>Fire/Smoke</option>
+            <option value="live/fall" ${state.liveMode === "live/fall" ? "selected" : ""}>Fall</option>
+            <option value="live/pose" ${state.liveMode === "live/pose" ? "selected" : ""}>Pose</option>
           </select>
           <div class="actions-inline">
-            <button id="stream-toggle-btn">Pause</button>
+            <button id="stream-toggle-btn">${state.livePaused ? "Resume" : "Pause"}</button>
             <button id="snapshot-btn">Snapshot</button>
           </div>
-          <img id="live-view" src="${API_BASE}/video_feed" alt="Live stream" />
+          <img id="live-view" src="" alt="Live stream" />
         </div>
       </article>
       <article class="card">
@@ -290,6 +309,7 @@ function renderDetection() {
             <option value="/detect/ppe/">PPE Detection</option>
             <option value="/detect/fire-smoke/">Fire/Smoke Detection</option>
             <option value="/detect/fall/">Fall Detection</option>
+            <option value="/detect/pose/">Pose Detection</option>
           </select>
           <input id="detect-file" type="file" accept="image/*" />
           <button id="run-detect-btn">Run Detection</button>
@@ -302,9 +322,9 @@ function renderDetection() {
 
   const live = document.getElementById("live-view");
   const modeSelect = document.getElementById("stream-mode");
-  let paused = false;
 
   function setLiveSource(modeValue) {
+    state.liveMode = modeValue;
     const streamUrl = `${API_BASE}/${modeValue}?t=${Date.now()}`;
     live.src = "";
     live.src = streamUrl;
@@ -319,14 +339,15 @@ function renderDetection() {
   }
 
   modeSelect.addEventListener("change", () => {
-    if (!paused) {
+    state.liveMode = modeSelect.value;
+    if (!state.livePaused) {
       setLiveSource(modeSelect.value);
     }
   });
 
   document.getElementById("stream-toggle-btn").addEventListener("click", (event) => {
-    paused = !paused;
-    if (paused) {
+    state.livePaused = !state.livePaused;
+    if (state.livePaused) {
       live.src = "";
       stopMonitoringLive();
       event.target.textContent = "Resume";
@@ -376,6 +397,10 @@ function renderDetection() {
       resultsEl.textContent = error.message;
     }
   });
+
+  if (!state.livePaused) {
+    setLiveSource(state.liveMode);
+  }
 }
 
 function renderIncidents() {
@@ -400,7 +425,7 @@ function renderIncidents() {
     <div class="toolbar">
       <h2>Incident Registry</h2>
       <div class="actions-inline">
-        <input id="manual-type" placeholder="Type (ppe/fire-smoke/fall/manual)" />
+        <input id="manual-type" placeholder="Type (ppe/fire-smoke/fall/pose/manual)" />
         <input id="manual-desc" placeholder="Manual incident description" />
         <button id="manual-add-btn">Log Incident</button>
       </div>
@@ -564,11 +589,10 @@ async function refreshAll() {
     state.sensitivity = sensitivity.sensitivity ?? 50;
     state.cameras = cameras;
     renderOverview();
-    renderDetection();
     renderIncidents();
     renderSettings();
   } catch (error) {
-    if (String(error.message).includes("401")) {
+    if (error.status === 401) {
       logout();
       return;
     }
