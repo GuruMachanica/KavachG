@@ -2,7 +2,12 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 import cv2
-from camera_stream import ensure_camera_started, get_frame
+from camera_stream import (
+    ensure_camera_started,
+    get_camera_index,
+    get_frame,
+    set_camera_index,
+)
 from live_session import deactivate_models
 from model_runtime import sleep_all_models
 from live_detection_utils import gen_live_detection
@@ -43,6 +48,29 @@ def stop_monitoring():
     deactivate_models()
     sleep_all_models()
     return {"message": "Monitoring stopped. Models are sleeping."}
+
+
+@router.post("/monitoring/camera/{camera_id}")
+def set_monitoring_camera(camera_id: int):
+    if camera_id < 0:
+        raise HTTPException(status_code=400, detail="Invalid camera id")
+
+    ok = set_camera_index(camera_id)
+    if not ok:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Camera {camera_id} is not available",
+        )
+
+    return {
+        "message": "Monitoring camera updated",
+        "camera_id": get_camera_index(),
+    }
+
+
+@router.get("/monitoring/camera")
+def get_monitoring_camera():
+    return {"camera_id": get_camera_index()}
 
 
 @router.get("/live/ppe")

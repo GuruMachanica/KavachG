@@ -180,6 +180,8 @@ c:/Desktop/KavachG/.venv/Scripts/python.exe -m ruff check Backend --select E,F -
 - Camera endpoints require camera availability and permissions.
 - Detection speed/accuracy depend on hardware and model quality.
 - Incident clips are stored in `Database/incident_clips`.
+- Incident images are stored in `Database/incident_images` and are excluded
+  from version control to avoid pushing evidence media.
 - If frontend calls return `401 Unauthorized`, sign in again to refresh
   the session token.
 

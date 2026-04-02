@@ -9,6 +9,7 @@ const state = {
   ws: null,
   liveMode: "video_feed",
   livePaused: false,
+  selectedCameraId: 0,
 };
 
 function esc(value) {
@@ -140,6 +141,14 @@ async function runDetection(path, file) {
   return parseResponse(response);
 }
 
+async function setMonitoringCamera(cameraId) {
+  const response = await fetch(`${API_BASE}/monitoring/camera/${cameraId}`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  return parseResponse(response);
+}
+
 function clipUrl(incident) {
   if (incident.clip_path) {
     return `${API_BASE}/clips/${encodeURIComponent(incident.clip_path)}?token=${encodeURIComponent(state.token)}`;
@@ -149,6 +158,20 @@ function clipUrl(incident) {
     return "";
   }
   return `${API_BASE}/clips/${encodeURIComponent(match[1])}?token=${encodeURIComponent(state.token)}`;
+}
+
+function reportUrl(incident) {
+  if (!incident.report_path) {
+    return "";
+  }
+  return `${API_BASE}/reports/${encodeURIComponent(incident.report_path)}?token=${encodeURIComponent(state.token)}`;
+}
+
+function imageUrl(incident) {
+  if (!incident.evidence_image) {
+    return "";
+  }
+  return `${API_BASE}/incident-images/${encodeURIComponent(incident.evidence_image)}?token=${encodeURIComponent(state.token)}`;
 }
 
 function formatTime(value) {
@@ -241,6 +264,7 @@ function renderOverview() {
       <h2>Operational Dashboard</h2>
       <div class="actions-inline">
         <button id="export-incidents-btn">Export Incidents CSV</button>
+        <button id="download-incident-report-btn">Download Incidents Report</button>
         <button id="download-fall-report-btn">Download Fall Report</button>
       </div>
     </div>
@@ -260,6 +284,20 @@ function renderOverview() {
   `;
 
   document.getElementById("export-incidents-btn").addEventListener("click", exportIncidentsCsv);
+  document.getElementById("download-incident-report-btn").addEventListener("click", async () => {
+    try {
+      const response = await fetch(`${API_BASE}/report/incidents`, { headers: authHeaders() });
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "incidents_report.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      showToast(`Incident report failed: ${error.message}`, "error");
+    }
+  });
   document.getElementById("download-fall-report-btn").addEventListener("click", async () => {
     try {
       const response = await fetch(`${API_BASE}/report/fall`, { headers: authHeaders() });
@@ -280,12 +318,17 @@ function renderDetection() {
   const cameraOptions = state.cameras.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
   document.getElementById("tab-detection").innerHTML = `
     <h2>Monitoring & Detection</h2>
-    <div class="split" style="margin-top: 1rem;">
-      <article class="card">
+    <article class="card detection-focus" style="margin-top: 1rem;">
+      <div class="toolbar">
         <h3>Live Monitoring</h3>
+        <span class="pill">Mode: ${esc(state.liveMode.replace("live/", "").replace("video_feed", "raw"))}</span>
+      </div>
+      <div class="detection-controls">
         <div class="stack">
           <label>Camera</label>
           <select id="camera-select">${cameraOptions || `<option value="0">Default Camera</option>`}</select>
+        </div>
+        <div class="stack">
           <label>Mode</label>
           <select id="stream-mode">
             <option value="video_feed" ${state.liveMode === "video_feed" ? "selected" : ""}>Raw Feed</option>
@@ -294,34 +337,24 @@ function renderDetection() {
             <option value="live/fall" ${state.liveMode === "live/fall" ? "selected" : ""}>Fall</option>
             <option value="live/pose" ${state.liveMode === "live/pose" ? "selected" : ""}>Pose</option>
           </select>
-          <div class="actions-inline">
-            <button id="stream-toggle-btn">${state.livePaused ? "Resume" : "Pause"}</button>
-            <button id="snapshot-btn">Snapshot</button>
-          </div>
-          <img id="live-view" src="" alt="Live stream" />
         </div>
-      </article>
-      <article class="card">
-        <h3>Run Image Detection</h3>
-        <div class="stack">
-          <label>Model</label>
-          <select id="model-select">
-            <option value="/detect/ppe/">PPE Detection</option>
-            <option value="/detect/fire-smoke/">Fire/Smoke Detection</option>
-            <option value="/detect/fall/">Fall Detection</option>
-            <option value="/detect/pose/">Pose Detection</option>
-          </select>
-          <input id="detect-file" type="file" accept="image/*" />
-          <button id="run-detect-btn">Run Detection</button>
-          <div id="detect-status" class="muted"></div>
-          <pre id="detect-results" class="code-box"></pre>
+        <div class="actions-inline">
+          <button id="stream-toggle-btn">${state.livePaused ? "Resume" : "Pause"}</button>
+          <button id="snapshot-btn">Snapshot</button>
+          <button id="fullscreen-btn">Fullscreen</button>
         </div>
-      </article>
-    </div>
+      </div>
+      <div class="live-stage">
+        <img id="live-view" src="" alt="Live stream" />
+      </div>
+    </article>
   `;
 
   const live = document.getElementById("live-view");
   const modeSelect = document.getElementById("stream-mode");
+  const cameraSelect = document.getElementById("camera-select");
+
+  cameraSelect.value = String(state.selectedCameraId);
 
   function setLiveSource(modeValue) {
     state.liveMode = modeValue;
@@ -372,29 +405,30 @@ function renderDetection() {
     a.click();
   });
 
-  document.getElementById("camera-select").addEventListener("change", () => {
-    showToast("Camera selection updated for operator context.");
+  document.getElementById("fullscreen-btn").addEventListener("click", async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await live.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (_error) {
+      showToast("Fullscreen not available.", "error");
+    }
   });
 
-  document.getElementById("run-detect-btn").addEventListener("click", async () => {
-    const file = document.getElementById("detect-file").files[0];
-    const modelPath = document.getElementById("model-select").value;
-    const statusEl = document.getElementById("detect-status");
-    const resultsEl = document.getElementById("detect-results");
-    if (!file) {
-      statusEl.textContent = "Select an image first.";
-      return;
-    }
-    statusEl.textContent = "Running model...";
-    resultsEl.textContent = "";
+  cameraSelect.addEventListener("change", async () => {
+    const nextCameraId = Number(cameraSelect.value);
     try {
-      const result = await runDetection(modelPath, file);
-      const detections = result.detections || [];
-      statusEl.textContent = `Completed with ${detections.length} detection(s).`;
-      resultsEl.textContent = JSON.stringify(detections, null, 2);
+      await setMonitoringCamera(nextCameraId);
+      state.selectedCameraId = nextCameraId;
+      showToast(`Camera switched to ${nextCameraId}.`);
+      if (!state.livePaused) {
+        setLiveSource(modeSelect.value);
+      }
     } catch (error) {
-      statusEl.textContent = "Detection failed.";
-      resultsEl.textContent = error.message;
+      showToast(error.message, "error");
+      cameraSelect.value = String(state.selectedCameraId);
     }
   });
 
@@ -406,16 +440,24 @@ function renderDetection() {
 function renderIncidents() {
   const rows = state.incidents.map((incident) => {
     const clip = clipUrl(incident);
+    const report = reportUrl(incident);
+    const image = imageUrl(incident);
     const statusOptions = ["Open", "In Progress", "Closed"].map((status) =>
       `<option value="${status}" ${incident.status === status ? "selected" : ""}>${status}</option>`
     ).join("");
     return `
       <tr>
         <td>${incident.id}</td>
+        <td>${incident.event_id ?? "-"}</td>
+        <td>${incident.camera_id ?? "-"}</td>
         <td>${esc(incident.type)}</td>
+        <td>${esc(incident.source || "-")}</td>
         <td>${esc(incident.description || "-")}</td>
+        <td>${incident.confidence != null ? Number(incident.confidence).toFixed(2) : "-"}</td>
         <td>${formatTime(incident.created_at)}</td>
         <td>${clip ? `<a href="${clip}" target="_blank">View</a>` : "-"}</td>
+        <td>${image ? `<a href="${image}" target="_blank">Image</a>` : "-"}</td>
+        <td>${report ? `<a href="${report}" target="_blank">Report</a>` : "-"}</td>
         <td><select data-id="${incident.id}" class="status-select">${statusOptions}</select></td>
         <td><button data-id="${incident.id}" class="feedback-btn">Feedback</button></td>
       </tr>`;
@@ -424,37 +466,18 @@ function renderIncidents() {
   document.getElementById("tab-incidents").innerHTML = `
     <div class="toolbar">
       <h2>Incident Registry</h2>
-      <div class="actions-inline">
-        <input id="manual-type" placeholder="Type (ppe/fire-smoke/fall/pose/manual)" />
-        <input id="manual-desc" placeholder="Manual incident description" />
-        <button id="manual-add-btn">Log Incident</button>
-      </div>
     </div>
     <div class="card" style="margin-top: 1rem;">
-      <table>
+      <div class="table-wrap">
+      <table class="incident-table">
         <thead>
-          <tr><th>ID</th><th>Type</th><th>Description</th><th>Time</th><th>Clip</th><th>Status</th><th>Feedback</th></tr>
+          <tr><th>ID</th><th>Event</th><th>Camera</th><th>Type</th><th>Source</th><th>Description</th><th>Confidence</th><th>Time</th><th>Clip</th><th>Image</th><th>Report</th><th>Status</th><th>Feedback</th></tr>
         </thead>
-        <tbody>${rows || `<tr><td colspan="7" class="muted">No incidents found</td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="13" class="muted">No incidents found</td></tr>`}</tbody>
       </table>
+      </div>
     </div>
   `;
-
-  document.getElementById("manual-add-btn").addEventListener("click", async () => {
-    const type = document.getElementById("manual-type").value.trim() || "manual";
-    const description = document.getElementById("manual-desc").value.trim();
-    if (!description) {
-      showToast("Enter incident description.", "error");
-      return;
-    }
-    try {
-      await addIncident(type, description);
-      showToast("Incident logged.");
-      await refreshAll();
-    } catch (error) {
-      showToast(error.message, "error");
-    }
-  });
 
   document.querySelectorAll(".status-select").forEach((select) => {
     select.addEventListener("change", async (event) => {

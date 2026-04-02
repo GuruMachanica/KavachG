@@ -18,3 +18,4 @@ Thumbs.db
 # Local runtime artifacts
 Database/factory.db
 Database/incident_clips/*.mp4
+Database/incident_images/

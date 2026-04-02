@@ -21,6 +21,15 @@ def get_db():
 
 
 def init_db():
+    def ensure_column(cursor, table_name, column_name, definition):
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        columns = {row[1] for row in cursor.fetchall()}
+        if column_name not in columns:
+            cursor.execute(
+                f"ALTER TABLE {table_name} "
+                f"ADD COLUMN {column_name} {definition}"
+            )
+
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
         # c.execute('''DROP TABLE IF EXISTS users''')
@@ -46,6 +55,22 @@ def init_db():
             status TEXT DEFAULT 'Open',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             clip_path TEXT
+        )""")
+        ensure_column(c, "incidents", "source", "TEXT DEFAULT 'manual'")
+        ensure_column(c, "incidents", "confidence", "REAL")
+        ensure_column(c, "incidents", "evidence_image", "TEXT")
+        ensure_column(c, "incidents", "report_path", "TEXT")
+        ensure_column(c, "incidents", "camera_id", "INTEGER")
+        ensure_column(c, "incidents", "event_id", "INTEGER")
+        c.execute("""CREATE TABLE IF NOT EXISTS incident_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            incident_type TEXT NOT NULL,
+            camera_id INTEGER,
+            state TEXT NOT NULL,
+            started_at TEXT NOT NULL,
+            last_seen_at TEXT NOT NULL,
+            resolved_at TEXT,
+            incident_count INTEGER DEFAULT 0
         )""")
         c.execute("""CREATE TABLE IF NOT EXISTS incident_audit (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -16,6 +16,7 @@ from cameras import router as cameras_router
 from report import router as report_router
 from auth import decode_access_token, get_current_user
 from database import DB_PATH
+from incident_worker import start_incident_worker
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
@@ -39,14 +40,15 @@ app.add_middleware(
 CLIPS_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../Database/incident_clips")
 )
+REPORTS_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../Database/incident_reports")
+)
+IMAGES_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../Database/incident_images")
+)
 
 
-@app.get("/clips/{clip_name}")
-def get_clip(
-    clip_name: str,
-    authorization: str | None = Header(default=None),
-    token: str | None = Query(default=None),
-):
+def _validate_user_token(authorization: str | None, token: str | None):
     bearer_token = None
     if authorization and authorization.startswith("Bearer "):
         bearer_token = authorization.split(" ", 1)[1]
@@ -63,6 +65,15 @@ def get_clip(
         if not c.fetchone():
             raise HTTPException(status_code=401, detail="User not found")
 
+
+@app.get("/clips/{clip_name}")
+def get_clip(
+    clip_name: str,
+    authorization: str | None = Header(default=None),
+    token: str | None = Query(default=None),
+):
+    _validate_user_token(authorization, token)
+
     safe_name = os.path.basename(clip_name)
     if safe_name != clip_name or not safe_name.endswith(".mp4"):
         raise HTTPException(status_code=400, detail="Invalid clip name")
@@ -72,8 +83,43 @@ def get_clip(
     return FileResponse(file_path, media_type="video/mp4")
 
 
+@app.get("/reports/{report_name}")
+def get_report(
+    report_name: str,
+    authorization: str | None = Header(default=None),
+    token: str | None = Query(default=None),
+):
+    _validate_user_token(authorization, token)
+
+    safe_name = os.path.basename(report_name)
+    if safe_name != report_name or not safe_name.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Invalid report name")
+    file_path = os.path.join(REPORTS_DIR, safe_name)
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="Report not found")
+    return FileResponse(file_path, media_type="application/json")
+
+
+@app.get("/incident-images/{image_name}")
+def get_incident_image(
+    image_name: str,
+    authorization: str | None = Header(default=None),
+    token: str | None = Query(default=None),
+):
+    _validate_user_token(authorization, token)
+
+    safe_name = os.path.basename(image_name)
+    if safe_name != image_name or not safe_name.endswith(".jpg"):
+        raise HTTPException(status_code=400, detail="Invalid image name")
+    file_path = os.path.join(IMAGES_DIR, safe_name)
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(file_path, media_type="image/jpeg")
+
+
 # --- INIT DB ---
 init_db()
+start_incident_worker()
 
 # --- INCLUDE ROUTERS ---
 app.include_router(auth_router)

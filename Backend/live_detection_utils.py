@@ -1,6 +1,6 @@
 import cv2
 import time
-from camera_stream import ensure_camera_started, get_frame
+from camera_stream import ensure_camera_started, get_camera_index, get_frame
 from live_session import (
     activate_model,
     deactivate_models,
@@ -12,14 +12,7 @@ from ppe_model import detect_ppe
 from fire_smoke_model import detect_fire_smoke
 from fall_model import detect_fall
 from pose_model import detect_pose
-from incidents_storage import save_incident_clip
-import requests
-import os
-from dotenv import load_dotenv
-
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
-
-INCIDENT_API = os.getenv("INCIDENT_API", "http://localhost:8000/incidents/")
+from incident_worker import enqueue_incident_job
 
 
 def gen_live_detection(model_type):
@@ -39,6 +32,7 @@ def gen_live_detection(model_type):
     persistence_threshold = 5  # anomaly must persist for 5s
     max_buffer = int(fps * record_duration)
     inactive_stream = False
+    last_confidence = None
     try:
         while True:
             # Sleep previous model streams when a new model is activated.
@@ -96,6 +90,15 @@ def gen_live_detection(model_type):
                 detections = []
                 anomaly = False
 
+            if detections:
+                confs = [
+                    float(det.get("confidence", 0.0))
+                    for det in detections
+                    if det.get("confidence") is not None
+                ]
+                if confs:
+                    last_confidence = max(confs)
+
             # Draw detections for all model types.
             for det in detections:
                 if "bbox" in det:
@@ -137,25 +140,21 @@ def gen_live_detection(model_type):
             if recording:
                 frames_buffer.append(frame.copy())
                 if len(frames_buffer) >= max_buffer:
-                    # Save clip
-                    clip_path = save_incident_clip(frames_buffer, model_type)
-                    # Create incident
-                    description = (
-                        f"{model_type.capitalize()} anomaly detected "
-                        f"and persisted for {persistence_threshold}s. "
-                        "Clip saved."
+                    enqueued = enqueue_incident_job(
+                        model_type=model_type,
+                        frames=frames_buffer.copy(),
+                        confidence=last_confidence,
+                        persistence_threshold=persistence_threshold,
+                        camera_id=get_camera_index(),
                     )
                     try:
-                        payload = {
-                            "type": model_type,
-                            "description": description,
-                            "clip_path": os.path.basename(clip_path)
-                            if clip_path
-                            else None,
-                        }
-                        requests.post(INCIDENT_API, json=payload, timeout=5)
+                        if not enqueued:
+                            print(
+                                "Failed to enqueue incident job. "
+                                "Skipping this incident."
+                            )
                     except Exception as e:
-                        print(f"Failed to create incident: {e}")
+                        print(f"Failed to enqueue incident: {e}")
                     last_incident_time = now
                     incident_recorded = True
                     recording = False

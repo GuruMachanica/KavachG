@@ -12,9 +12,14 @@ class SharedCamera:
         self._frame = None
         self._running = False
         self._lock = threading.Lock()
+        self._state_lock = threading.Lock()
         self._thread = None
 
     def start(self) -> bool:
+        with self._state_lock:
+            return self._start_unlocked()
+
+    def _start_unlocked(self) -> bool:
         if self._running and self.cap is not None and self.cap.isOpened():
             return True
 
@@ -50,10 +55,34 @@ class SharedCamera:
             return self._frame.copy()
 
     def stop(self) -> None:
+        with self._state_lock:
+            self._stop_unlocked()
+
+    def _stop_unlocked(self) -> None:
         self._running = False
+        thread = self._thread
+        self._thread = None
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=0.3)
         if self.cap is not None:
             self.cap.release()
             self.cap = None
+
+    def set_camera_index(self, index: int) -> bool:
+        with self._state_lock:
+            if (
+                index == self.index
+                and self.cap is not None
+                and self.cap.isOpened()
+            ):
+                return True
+            self._stop_unlocked()
+            self.index = index
+            return self._start_unlocked()
+
+    def get_camera_index(self) -> int:
+        with self._state_lock:
+            return self.index
 
 
 _shared_camera = SharedCamera(index=0)
@@ -61,6 +90,14 @@ _shared_camera = SharedCamera(index=0)
 
 def ensure_camera_started() -> bool:
     return _shared_camera.start()
+
+
+def set_camera_index(index: int) -> bool:
+    return _shared_camera.set_camera_index(index)
+
+
+def get_camera_index() -> int:
+    return _shared_camera.get_camera_index()
 
 
 def get_frame(timeout_seconds: float = 1.0):
