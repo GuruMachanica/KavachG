@@ -2,7 +2,7 @@
 
 KavachG is an industrial safety monitoring and incident response platform.
 It combines live camera monitoring, AI-based detection (PPE, fire/smoke,
-fall), incident tracking, and reporting in one web interface.
+fall, pose), incident tracking, and reporting in one web interface.
 
 ## Features
 
@@ -12,11 +12,13 @@ fall), incident tracking, and reporting in one web interface.
   - PPE detection
   - Fire and smoke detection
   - Fall detection
+  - Pose detection
 - Live monitoring streams:
   - Raw camera feed
   - PPE live detection
   - Fire/smoke live detection
   - Fall live detection
+  - Pose live detection
 - Incident lifecycle management:
   - create, list, status update, feedback
 - Protected incident clip access.
@@ -32,6 +34,8 @@ KavachG uses on-demand model runtime for live monitoring:
 - Switching to another live model sleeps the previous model.
 - Pausing monitoring (or switching to raw feed) stops monitoring and
   unloads models.
+- Pose model loading uses fallback checkpoints if a custom pose checkpoint
+  is not directly compatible with the current runtime.
 
 ## Tech Stack
 
@@ -150,6 +154,7 @@ cd Backend
 - `POST /detect/ppe/`
 - `POST /detect/fire-smoke/`
 - `POST /detect/fall/`
+- `POST /detect/pose/`
 
 ### Live Monitoring
 
@@ -157,6 +162,7 @@ cd Backend
 - `GET /live/ppe`
 - `GET /live/fire-smoke`
 - `GET /live/fall`
+- `GET /live/pose`
 - `POST /monitoring/stop`
 
 ### Reports
@@ -174,6 +180,8 @@ c:/Desktop/KavachG/.venv/Scripts/python.exe -m ruff check Backend --select E,F -
 - Camera endpoints require camera availability and permissions.
 - Detection speed/accuracy depend on hardware and model quality.
 - Incident clips are stored in `Database/incident_clips`.
+- If frontend calls return `401 Unauthorized`, sign in again to refresh
+  the session token.
 
 ## Security
 
