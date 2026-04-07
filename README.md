@@ -190,3 +190,11 @@ c:/Desktop/KavachG/.venv/Scripts/python.exe -m ruff check Backend --select E,F -
 - Do not commit `Backend/.env`.
 - Use strong `SECRET_KEY` and admin credentials.
 - Restrict `ALLOWED_ORIGINS` in production.
+
+## License
+
+This repository is released under an **Inspiration-Only License**.
+
+- See `LICENSE` for full terms.
+- Source code copying/reuse/redistribution is not permitted without prior
+  written permission from the copyright owner.
