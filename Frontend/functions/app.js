@@ -1,4 +1,4 @@
-// app.js - VajraNetra Autonomous Industrial Safety Command Center Bootstrap
+// app.js - VajraNetra Autonomous Industrial Safety Command Center Bootstrap (Lazy Loaded & Mobile Optimized)
 import { eventBus } from "./core/EventBus.js";
 import { stateManager } from "./core/StateManager.js";
 import { apiClient } from "./core/ApiClient.js";
@@ -8,36 +8,36 @@ import { emailAlertService } from "./core/EmailAlertService.js";
 import { voiceEngine } from "./core/VoiceAnnouncementEngine.js";
 import { threeBackground } from "./ui/ThreeBackground.js";
 import { animationEngine } from "./ui/AnimationEngine.js";
-
-import { OverviewView } from "./views/OverviewView.js";
-import { DetectionView } from "./views/DetectionView.js";
-import { DigitalTwinView } from "./views/DigitalTwinView.js";
-import { IncidentsView } from "./views/IncidentsView.js";
-import { CopilotView } from "./views/CopilotView.js";
-import { SettingsView } from "./views/SettingsView.js";
 import { modalManager } from "./ui/ModalManager.js";
+
+// View Dynamic Loaders for Code Splitting & AJAX Lazy Loading
+const VIEW_FACTORIES = {
+  overview: () => import("./views/OverviewView.js").then((m) => new m.OverviewView()),
+  detection: () => import("./views/DetectionView.js").then((m) => new m.DetectionView()),
+  digitaltwin: () => import("./views/DigitalTwinView.js").then((m) => new m.DigitalTwinView()),
+  incidents: () => import("./views/IncidentsView.js").then((m) => new m.IncidentsView()),
+  copilot: () => import("./views/CopilotView.js").then((m) => new m.CopilotView()),
+  settings: () => import("./views/SettingsView.js").then((m) => new m.SettingsView()),
+};
 
 export class VajraNetraApplication {
   constructor() {
-    this.views = {
-      overview: new OverviewView(),
-      detection: new DetectionView(),
-      digitaltwin: new DigitalTwinView(),
-      incidents: new IncidentsView(),
-      copilot: new CopilotView(),
-      settings: new SettingsView(),
-    };
+    this.views = {};
+    this.loadingView = false;
   }
 
   init() {
-    // 1. Initialize 3D Background & Email Alert Service
+    // 1. Initialize 3D Background & Alert Services
     threeBackground.init();
     emailAlertService.init();
 
     // 2. Setup Event Bus Listeners
     this._setupEvents();
 
-    // 3. Check Authentication State
+    // 3. Setup Mobile Navigation & Resize Handlers
+    this._setupMobileNavigation();
+
+    // 4. Check Authentication State
     if (stateManager.isAuthenticated()) {
       this._showApp();
       this.switchTab("overview");
@@ -55,48 +55,49 @@ export class VajraNetraApplication {
     // Toast notifications
     eventBus.on("toast", ({ message, type = "ok" }) => this.showToast(message, type));
 
-    // Incident alert
+    // Incident alerts
     eventBus.on("incident:alert", (incident) => {
       this.showToast(`HAZARD DETECTED: ${incident?.type?.toUpperCase() || "ALERT"}`, "error");
-      threeBackground.setThreatLevel(true);
+      audioAlertEngine.playAlarm();
+      voiceEngine.announce(incident);
       emailAlertService.sendIncidentAlert(incident);
-      voiceEngine.announceIncident(incident);
       this.refreshData();
     });
 
-    // WebSocket data sync
-    eventBus.on("ws:update", () => this.refreshData());
-
-    // Refresh request
-    eventBus.on("data:refresh", () => this.refreshData());
-
-    // Export CSV request
-    eventBus.on("incidents:export", () => this._exportCsv());
-
-    // Auth events
-    eventBus.on("auth:logout", () => {
-      wsService.disconnect();
-      this._showLogin();
+    // Global state updates
+    eventBus.on("state:updated", ({ key, value }) => {
+      if (key === "incidents") {
+        const curTab = stateManager.get("currentTab");
+        if (this.views[curTab]) {
+          this.views[curTab].render();
+        }
+      }
     });
 
     // DOM Global Event Listeners
     document.querySelectorAll(".sidebar-nav-btn[data-tab], .nav-btn[data-tab]").forEach((btn) => {
-      btn.addEventListener("click", () => this.switchTab(btn.dataset.tab));
+      btn.addEventListener("click", () => {
+        this.switchTab(btn.dataset.tab);
+        this.closeMobileSidebar();
+      });
     });
 
     document.getElementById("btn-new-audit")?.addEventListener("click", () => {
       this.switchTab("incidents");
+      this.closeMobileSidebar();
       this.showToast("Initiating rapid OSHA 1910 subpart inspection...");
     });
 
     // Support Modal
     document.getElementById("sidebar-support-btn")?.addEventListener("click", () => {
       modalManager.showSupportModal();
+      this.closeMobileSidebar();
     });
 
     // System Log Modal
     document.getElementById("sidebar-syslog-btn")?.addEventListener("click", () => {
       modalManager.showSystemLogModal();
+      this.closeMobileSidebar();
     });
 
     // Admin Profile Modal
@@ -105,6 +106,7 @@ export class VajraNetraApplication {
       el.addEventListener("click", (e) => {
         if (e.target.id !== "logout-btn") {
           modalManager.showAdminProfileModal();
+          this.closeMobileSidebar();
         }
       });
     });
@@ -112,7 +114,6 @@ export class VajraNetraApplication {
     document.getElementById("logout-btn")?.addEventListener("click", () => {
       stateManager.clearAuth();
     });
-
 
     document.getElementById("voice-toggle-btn")?.addEventListener("click", (e) => {
       voiceEngine.toggle(!voiceEngine.enabled);
@@ -162,126 +163,138 @@ export class VajraNetraApplication {
     });
   }
 
-  switchTab(tabName) {
+  _setupMobileNavigation() {
+    // Mobile Drawer Toggle Button
+    const topHeader = document.querySelector(".top-header");
+    if (topHeader && !document.getElementById("mobile-menu-btn")) {
+      const menuBtn = document.createElement("button");
+      menuBtn.id = "mobile-menu-btn";
+      menuBtn.className = "mobile-menu-btn";
+      menuBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+      menuBtn.setAttribute("aria-label", "Toggle Navigation Menu");
+      menuBtn.addEventListener("click", () => this.toggleMobileSidebar());
+      topHeader.prepend(menuBtn);
+    }
+
+    // Mobile Backdrop
+    if (!document.getElementById("sidebar-backdrop")) {
+      const backdrop = document.createElement("div");
+      backdrop.id = "sidebar-backdrop";
+      backdrop.className = "sidebar-backdrop hidden";
+      backdrop.addEventListener("click", () => this.closeMobileSidebar());
+      document.body.appendChild(backdrop);
+    }
+  }
+
+  toggleMobileSidebar() {
+    const sidebar = document.querySelector(".sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (sidebar) {
+      const isOpen = sidebar.classList.toggle("sidebar-mobile-open");
+      if (backdrop) {
+        backdrop.classList.toggle("hidden", !isOpen);
+      }
+    }
+  }
+
+  closeMobileSidebar() {
+    const sidebar = document.querySelector(".sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (sidebar) sidebar.classList.remove("sidebar-mobile-open");
+    if (backdrop) backdrop.classList.add("hidden");
+  }
+
+  /**
+   * Dynamic Async View Lazy Loader & Tab Switcher
+   */
+  async switchTab(tabName) {
+    if (this.loadingView) return;
     stateManager.set("currentTab", tabName);
 
     document.querySelectorAll(".tab-content").forEach((tab) => tab.classList.add("hidden"));
     document.querySelectorAll(".sidebar-nav-btn, .nav-btn").forEach((btn) => btn.classList.remove("active"));
 
-    const activeView = this.views[tabName];
     const activeTabEl = document.getElementById(`tab-${tabName}`);
     const activeBtnEls = document.querySelectorAll(`[data-tab='${tabName}']`);
 
-    if (activeTabEl) {
-      activeTabEl.classList.remove("hidden");
-      animationEngine.fadeIn(activeTabEl);
-    }
     activeBtnEls.forEach((btn) => btn.classList.add("active"));
 
-    if (activeView) {
-      activeView.render();
+    // Lazy load the view module if not instantiated yet
+    if (!this.views[tabName] && VIEW_FACTORIES[tabName]) {
+      this.loadingView = true;
+      try {
+        this.views[tabName] = await VIEW_FACTORIES[tabName]();
+      } catch (err) {
+        console.error(`Failed to lazy-load view: ${tabName}`, err);
+      } finally {
+        this.loadingView = false;
+      }
+    }
+
+    const activeView = this.views[tabName];
+    if (activeTabEl) {
+      activeTabEl.classList.remove("hidden");
+      if (activeView && typeof activeView.render === "function") {
+        activeView.render();
+      }
+      animationEngine.fadeIn(activeTabEl);
     }
   }
-
 
   async refreshData() {
     try {
-      const [incidents, sens, cams, zones] = await Promise.all([
-        apiClient.getIncidents(),
-        apiClient.getSensitivity(),
-        apiClient.getCameras(),
-        apiClient.getZones(),
+      const [incidents, people, sensitivity, cameras] = await Promise.all([
+        apiClient.getIncidents().catch(() => []),
+        apiClient.getPeople().catch(() => []),
+        apiClient.getSensitivity().catch(() => ({ confidence_threshold: 0.5 })),
+        apiClient.getCameras().catch(() => []),
       ]);
 
       stateManager.set("incidents", incidents);
-      stateManager.set("sensitivity", sens.sensitivity);
-      stateManager.set("cameras", cams);
-      stateManager.set("zones", zones);
+      stateManager.set("people", people);
+      stateManager.set("sensitivity", sensitivity.confidence_threshold || 0.5);
+      stateManager.set("cameras", cameras);
 
-      this._updateSystemStatusPill();
-
-      const currentTab = stateManager.get("currentTab");
-      if (this.views[currentTab]) {
-        this.views[currentTab].render();
+      const curTab = stateManager.get("currentTab") || "overview";
+      if (this.views[curTab]) {
+        this.views[curTab].render();
       }
     } catch (err) {
-      console.error("[App] Data sync failed:", err);
+      console.warn("Telemetry polling warning:", err);
     }
   }
 
-  _updateSystemStatusPill() {
-    const pill = document.getElementById("system-status-indicator");
-    const text = document.getElementById("system-status-text");
-    if (!pill || !text) return;
+  showToast(message, type = "ok") {
+    const container = document.getElementById("toast-container") || document.body;
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-10px)";
+      toast.style.transition = "all 0.3s ease";
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
 
-    const incidents = stateManager.get("incidents") || [];
-    const openIncidents = incidents.filter((i) => i.status === "Open");
-    const hasCritical = openIncidents.some((i) =>
-      ["fall", "fire-smoke", "fire"].includes(String(i.type).toLowerCase())
-    );
-
-    if (hasCritical) {
-      pill.className = "status-pill status-pill-danger";
-      text.textContent = `${openIncidents.length} Critical Hazard(s) Active`;
-      threeBackground.setThreatLevel(true);
-    } else if (openIncidents.length > 0) {
-      pill.className = "status-pill status-pill-warning";
-      text.textContent = `${openIncidents.length} Incident(s) Pending`;
-      threeBackground.setThreatLevel(false);
-    } else {
-      pill.className = "status-pill status-pill-safe";
-      text.textContent = "All Systems Operational";
-      threeBackground.setThreatLevel(false);
-    }
+  _showLogin() {
+    document.getElementById("login-view")?.classList.remove("hidden");
+    document.getElementById("app-view")?.classList.add("hidden");
   }
 
   _showApp() {
     document.getElementById("login-view")?.classList.add("hidden");
     document.getElementById("app-view")?.classList.remove("hidden");
+
     const user = stateManager.get("user");
-    const welcome = document.getElementById("welcome-text");
-    if (welcome) {
-      welcome.textContent = `${user?.name || user?.email || "Operator"}`;
+    if (user && document.getElementById("welcome-text")) {
+      document.getElementById("welcome-text").textContent = `${user.name || "Operator"}`;
     }
-  }
-
-  _showLogin() {
-    document.getElementById("app-view")?.classList.add("hidden");
-    document.getElementById("login-view")?.classList.remove("hidden");
-  }
-
-  showToast(message, type = "ok") {
-    const toast = document.createElement("div");
-    toast.className = `toast ${type === "error" ? "toast-error" : "toast-ok"}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2800);
-  }
-
-  _exportCsv() {
-    const incidents = stateManager.get("incidents") || [];
-    const header = "ID,Type,Description,Status,Created_At,Confidence\n";
-    const rows = incidents.map((i) =>
-      [
-        i.id,
-        `"${String(i.type || "").replaceAll('"', '""')}"`,
-        `"${String(i.description || "").replaceAll('"', '""')}"`,
-        `"${String(i.status || "").replaceAll('"', '""')}"`,
-        `"${i.created_at}"`,
-        i.confidence || "",
-      ].join(",")
-    );
-    const blob = new Blob([header + rows.join("\n")], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `vajranetra_incidents_${Date.now()}.csv`;
-    a.click();
-    this.showToast("Incident log CSV exported successfully.");
   }
 }
 
-// Bootstrap on DOM Ready
+// Bootstrap Application on DOM Ready
 window.addEventListener("DOMContentLoaded", () => {
   const app = new VajraNetraApplication();
   app.init();
