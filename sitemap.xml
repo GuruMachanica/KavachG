@@ -5,13 +5,13 @@
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <!-- Homepage Portal -->
   <url>
-    <loc>https://vajranetra.ai/</loc>
+    <loc>https://kavachg.com/</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://vajranetra.ai/index.html</loc>
+    <loc>https://kavachg.com/index.html</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -19,7 +19,7 @@
 
   <!-- AI Modules Deep Dive -->
   <url>
-    <loc>https://vajranetra.ai/modules.html</loc>
+    <loc>https://kavachg.com/modules.html</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
@@ -27,7 +27,7 @@
 
   <!-- CCTV Surveillance Demo -->
   <url>
-    <loc>https://vajranetra.ai/demo.html</loc>
+    <loc>https://kavachg.com/demo.html</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -35,7 +35,7 @@
 
   <!-- Enterprise Architecture -->
   <url>
-    <loc>https://vajranetra.ai/architecture.html</loc>
+    <loc>https://kavachg.com/architecture.html</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -43,7 +43,7 @@
 
   <!-- OSHA 1910 Compliance Standards -->
   <url>
-    <loc>https://vajranetra.ai/compliance.html</loc>
+    <loc>https://kavachg.com/compliance.html</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -51,7 +51,7 @@
 
   <!-- Edge Performance Benchmarks -->
   <url>
-    <loc>https://vajranetra.ai/benchmarks.html</loc>
+    <loc>https://kavachg.com/benchmarks.html</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -59,7 +59,7 @@
 
   <!-- Command Console -->
   <url>
-    <loc>https://vajranetra.ai/console.html</loc>
+    <loc>https://kavachg.com/console.html</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

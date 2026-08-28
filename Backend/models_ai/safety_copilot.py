@@ -137,7 +137,7 @@ def ask_safety_copilot(query: str) -> dict:
         rule = OSHA_STANDARDS["fire-smoke"]
         response = f"**Fire Emergency Standard ({rule['standard']})**: Immediate sound alarm dispatch. Verify fire suppression access and clear exit routes in the affected zone."
     else:
-        response = f"VajraNetra Safety Copilot: Monitoring active streams. Current plant risk status is **{briefing['safety_posture']}**. Recommended action: {briefing['copilot_recommendation']}"
+        response = f"KavachG Safety Copilot: Monitoring active streams. Current plant risk status is **{briefing['safety_posture']}**. Recommended action: {briefing['copilot_recommendation']}"
 
 
     return {

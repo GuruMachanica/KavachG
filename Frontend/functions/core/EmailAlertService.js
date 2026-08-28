@@ -93,7 +93,7 @@ export class EmailAlertService {
     return this.sendIncidentAlert({
       id: "TEST-01",
       type: "PPE Violation (Test)",
-      description: "This is a verification test email from the VajraNetra Safety Command Center.",
+      description: "This is a verification test email from the KavachG Safety Command Center.",
 
       created_at: new Date().toISOString(),
       camera_id: 0,

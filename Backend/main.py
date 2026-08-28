@@ -30,7 +30,7 @@ from copilot_router import router as copilot_router
 from incident_worker import start_incident_worker
 
 # --- APP SETUP ---
-app = FastAPI(title="VajraNetra Industrial AI Safety Core", version="2.5.0")
+app = FastAPI(title="KavachG Industrial AI Safety Core", version="2.5.0")
 allowed_origins = [
     origin.strip()
     for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:8000,http://127.0.0.1:5500,http://localhost:5500").split(
@@ -141,7 +141,7 @@ app.include_router(copilot_router, prefix="", tags=["Copilot"])
 def root():
     return {
         "status": "online",
-        "service": "VajraNetra Industrial AI Safety Core",
+        "service": "KavachG Industrial AI Safety Core",
         "version": "2.5.0",
         "docs": "/docs",
     }

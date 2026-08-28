@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VajraNetra — Edge Model Optimization & Quantization Pipeline
+KavachG — Edge Model Optimization & Quantization Pipeline
 Exports and quantizes PyTorch (.pt) models to:
 1. FP16 Half-Precision (.pt / .onnx) — 50% VRAM reduction, 2x FPS speedup.
 2. ONNX Runtime Engine (.onnx) — Platform-independent high-throughput edge execution.
@@ -49,7 +49,7 @@ def optimize_models(target_format="onnx", half_precision=True, int8_quant=False)
         return False
 
     print("=" * 70)
-    print("  VAJRANETRA EDGE MODEL QUANTIZATION & OPTIMIZATION PIPELINE")
+    print("  KAVACHG EDGE MODEL QUANTIZATION & OPTIMIZATION PIPELINE")
     print("=" * 70)
     print(f"Target Format    : {target_format.upper()}")
     print(f"Half Precision   : {half_precision} (FP16)")
@@ -88,7 +88,7 @@ def optimize_models(target_format="onnx", half_precision=True, int8_quant=False)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="VajraNetra Model Quantization Tool")
+    parser = argparse.ArgumentParser(description="KavachG Model Quantization Tool")
     parser.add_argument(
         "--format",
         type=str,

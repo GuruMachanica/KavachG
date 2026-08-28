@@ -1,4 +1,4 @@
-// app.js - VajraNetra Autonomous Industrial Safety Command Center Bootstrap (Lazy Loaded & Mobile Optimized)
+// app.js - KavachG Autonomous Industrial Safety Command Center Bootstrap (Lazy Loaded & Mobile Optimized)
 import { eventBus } from "./core/EventBus.js";
 import { stateManager } from "./core/StateManager.js";
 import { apiClient } from "./core/ApiClient.js";
@@ -20,7 +20,7 @@ const VIEW_FACTORIES = {
   settings: () => import("./views/SettingsView.js").then((m) => new m.SettingsView()),
 };
 
-export class VajraNetraApplication {
+export class KavachGApplication {
   constructor() {
     this.views = {};
     this.loadingView = false;
@@ -299,7 +299,8 @@ export class VajraNetraApplication {
 
 // Bootstrap Application on DOM Ready
 window.addEventListener("DOMContentLoaded", () => {
-  const app = new VajraNetraApplication();
+  const app = new KavachGApplication();
   app.init();
-  window.vajraNetraApp = app;
+  window.kavachGApp = app;
 });
+

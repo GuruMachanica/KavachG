@@ -153,7 +153,7 @@ export class ModalManager {
       { time: "12:38:12", type: "AUTH-OK", msg: "Operator Admin verified with JWT bearer clearance" },
       { time: "12:30:00", type: "DB-SYNC", msg: "SQLite WAL checkpoint committed (0 locks active, 0 contention)" },
       { time: "12:15:44", type: "HAZ-WARN", msg: "Zone ingress event: Worker #04 near forklift exclusion perimeter" },
-      { time: "12:00:00", type: "SYS-BOOT", msg: "VajraNetra 2.5 Industrial Core online. Models loaded into GPU VRAM." },
+      { time: "12:00:00", type: "SYS-BOOT", msg: "KavachG 2.5 Industrial Core online. Models loaded into GPU VRAM." },
     ];
 
     const logsHtml = mockLogs.map((l) => {
@@ -189,7 +189,7 @@ export class ModalManager {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `vajranetra_system_log_${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `kavachg_system_log_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
       eventBus.emit("toast", { message: "System audit logs exported." });
     });
@@ -204,7 +204,7 @@ export class ModalManager {
 
   showAdminProfileModal() {
     if (!this.modal) return;
-    const user = stateManager.get("user") || { name: "Admin", email: "admin@vajranetra.com", role: "Administrator" };
+    const user = stateManager.get("user") || { name: "Admin", email: "admin@kavachg.com", role: "Administrator" };
 
 
     this.title.innerHTML = `<span style="color: var(--accent-cyan); display: inline-flex; vertical-align: middle; margin-right: 6px;">${Icons.users}</span> Operator Account & Security Clearance`;

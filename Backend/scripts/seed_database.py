@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VajraNetra — Factory Database Seeder
+KavachG — Factory Database Seeder
 Populates Database/factory.db with operational worker personnel and real-time incident records.
 """
 

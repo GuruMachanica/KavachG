@@ -27,7 +27,7 @@ export class CopilotView extends BaseView {
     const messagesHtml = this.messages.map((m) => `
       <div class="copilot-msg ${m.role === "user" ? "copilot-msg-user" : "copilot-msg-ai"}" style="padding: 1rem 1.25rem; border-radius: 12px; background: ${m.role === "user" ? "rgba(0, 240, 255, 0.12)" : "rgba(13, 22, 33, 0.85)"}; border: 1px solid ${m.role === "user" ? "var(--accent-cyan)" : "var(--border-subtle)"};">
         <div style="font-size: 0.75rem; font-family: var(--font-mono); margin-bottom: 0.35rem; color: ${m.role === "user" ? "var(--accent-cyan)" : "var(--accent-emerald)"}; font-weight: 700;">
-          ${m.role === "user" ? "OPERATOR SESSION" : "VAJRANETRA SAFETY COPILOT"}
+          ${m.role === "user" ? "OPERATOR SESSION" : "KAVACHG SAFETY COPILOT"}
         </div>
         <div style="line-height: 1.6; font-size: 0.9rem; white-space: pre-line; color: #e2e8f0;">${this.escape(m.text)}</div>
       </div>

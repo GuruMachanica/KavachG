@@ -16,7 +16,7 @@ def main():
     init_db()
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    email = os.getenv("ADMIN_EMAIL", "admin@vajranetra.com")
+    email = os.getenv("ADMIN_EMAIL", "admin@kavachg.com")
 
     password = os.getenv("ADMIN_PASSWORD", "admin123456")
     if not password:

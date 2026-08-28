@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-SECRET_KEY = os.getenv("SECRET_KEY", "vajranetra_enterprise_secure_secret_key_2026_x89a")
+SECRET_KEY = os.getenv("SECRET_KEY", "kavachg_enterprise_secure_secret_key_2026_x89a")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120

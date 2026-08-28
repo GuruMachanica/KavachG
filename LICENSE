@@ -1,48 +1,38 @@
-PROPRIETARY - STRICT PRIVATE USE & INSPECTION LICENSE
+INSPIRATION-ONLY LICENSE
+Copyright (c) 2026 Team Ironlogic
+All rights reserved.
 
-Copyright (c) 2026 Mohammad Huzaifa. All rights reserved.
+Team members:
+ - Mohammad Huzaifa
+ - Mohnish Narayan Gupta
+ - Ashutosh Mishra
+ - Mohammad Saad
 
-Copyright Owner:
-- Mohammad Huzaifa (https://github.com/GuruMachanica)
-- Contact: mdhuzaifa00786@gmail.com
+1. Grant of Permission
 
----
+Permission is granted to view this project and use ideas from it for learning and inspiration only.
 
-### 1. Grant of Permission
-Permission is granted solely to inspect the raw source code, architecture diagrams, and documentation of this repository for private educational study, personal learning, and peer inspection. No other rights or licenses are granted. Under no circumstances is permission granted to run, deploy, compile, execute, copy, distribute, or host this software or its subcomponents in any environment (including local machines, cloud providers, virtual servers, mobile devices, emulators, or production systems).
+2. Restrictions
 
----
+You may not, without prior written permission from the copyright owner(s):
 
-### 2. Strict Restrictions & Prohibitions
-By viewing, cloning, checking out, downloading, or inspecting this repository, you enter into a legally binding agreement adhering to the following strict prohibitions without prior, express, and written authorization from the copyright owners:
+ - Copy, reproduce, or paste any part of this source code
+ - Redistribute or publish this project in whole or in part
+ - Create derivative repositories that reuse substantial portions of this code
+ - Reuse project assets, design sections, animations, or branding elements
+ - Sell, sublicense, or otherwise commercially exploit this codebase
 
-1. **No Execution or Deployment**: You may not compile, build, run, host, deploy, or execute the VajraNetra platform (including the Three.js / Anime.js frontend, 3D Digital Twin visualizer, client-side Web Audio/Speech PA engine, on-device YOLOv8 AI pipeline, FastAPI/Python backend, incident background workers, or daemons) on any public or private server (such as AWS, GCP, Azure, Oracle Cloud, Render, Docker containers, VPS, or local environments) for active operational use.
-2. **No Code Copying or Plagiarism**: You may not copy, duplicate, clone, replicate, hotlink, republish, or paste any portion of this codebase, algorithms, API endpoints, schema definitions, spatial tracking protocols, or database structures.
-3. **No Derivative Works or Forks**: You may not create, compile, distribute, publish, or sublicense any derivative works, modified builds, forks, plugins, or complementary extensions derived from this codebase.
-4. **No Pipeline or Model Integration**: You may not extract or integrate any subcomponents of VajraNetra—including the 3D Digital Twin engine, IoU gear binding models, temporal skeletal fall keypoint classifiers, optical flame detectors, or automated OSHA Form 301 PDF generators—into third-party applications, commercial bots, security software, or API gateways.
-5. **No Commercial Exploitation**: You may not sell, lease, rent, license, sub-license, commercialize, or use this software, models, or documentation to generate direct or indirect revenue.
-6. **No Asset or UI Theft**: You may not reuse any visual assets, logos, 3D Digital Twin components, design systems, UI components, animations, color palettes, or branding elements created for VajraNetra.
-7. **No Reverse Engineering or Penetration Attacks**: You may not reverse-engineer, decompile, disassemble, or extract algorithms/parameters from the backend services or client-side modules. You are strictly forbidden from performing penetration testing, vulnerability scanning, fuzzing, or DDoS/DoS simulations against active VajraNetra infrastructure.
-8. **No AI / LLM Model Training**: This codebase, including all source files, documentation, model architectures, datasets, and comments, must not be used as training inputs, fine-tuning corpora, or scraped to train Large Language Models (LLMs), code synthesis agents, developer assistants, or generative AI models without written consent.
-9. **No Unauthorized Academic Submission**: Under no circumstances may this project, in whole or in part, be submitted as original work for academic credit, thesis evaluation, hackathons, grading, or certification at any university, college, school, or educational boot camp without explicit prior written authorization from the copyright owners.
+3. Ownership
 
----
+All rights, title, and interest in this project remain with the copyright owner(s): Team Ironlogic.
 
-### 3. Intellectual Property & Ownership
-All rights, titles, interests, patents, copyrights, and intellectual property rights in and to this project (including the VajraNetra name, branding, 3D Digital Twin Engine, YOLOv8 Vision Architecture, database schemas, and client UI) remain exclusively owned by Mohammad Huzaifa.
+4. No Warranty
 
----
+This project is provided "AS IS", without warranty of any kind, express or implied.
 
-### 4. No Warranty
-THIS CODEBASE, MODELS, AND DOCUMENTATION ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+5. Enforcement
 
----
+Unauthorized use is a violation of copyright law and this license.
 
-### 5. Breach of Terms & Legal Enforcement
-Any violation of these terms immediately and automatically terminates all permission to inspect this repository. Unauthorized copying, execution, redistribution, or commercial use constitutes willful copyright infringement under international intellectual property treaties (including the DMCA and WIPO conventions). The copyright owners reserve all rights to pursue immediate injunctive relief, statutory damages, legal costs, and immediate DMCA takedown proceedings against any unauthorized deployments or duplicate repositories.
-
----
-
-### 6. Licensing Inquiries & Permissions
-For commercial licensing, enterprise partnerships, or academic authorization requests, contact:
-mdhuzaifa00786@gmail.com
+For permissions, contact:
+ironlogic@zohomail.in
