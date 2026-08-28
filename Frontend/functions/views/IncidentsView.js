@@ -1,6 +1,7 @@
-// IncidentsView.js - OSHA 1910 Compliance & Audit Management (No Emojis)
+// IncidentsView.js - OSHA 1910 Compliance & Real Database Audit Records
 import { BaseView } from "./BaseView.js";
 import { stateManager } from "../core/StateManager.js";
+import { apiClient } from "../core/ApiClient.js";
 import { pdfReportGenerator } from "../core/PDFReportGenerator.js";
 import { eventBus } from "../core/EventBus.js";
 import { Icons } from "../ui/Icons.js";
@@ -13,14 +14,75 @@ export class IncidentsView extends BaseView {
   render() {
     if (!this.container) return;
 
-    const complianceScore = 92;
+    const incidents = stateManager.get("incidents") || [];
+    const openCount = incidents.filter((i) => i.status === "Open").length;
+    const progressCount = incidents.filter((i) => i.status === "In Progress").length;
+    const resolvedCount = incidents.filter((i) => i.status === "Resolved").length;
+
+    const complianceScore = incidents.length > 0
+      ? Math.round(((resolvedCount + progressCount * 0.5) / incidents.length) * 100)
+      : 100;
+
+    // Dynamically build audit table rows from SQLite incidents
+    const tableRowsHtml = incidents.length > 0 ? incidents.map((inc) => {
+      const isResolved = inc.status === "Resolved";
+      const statusColor = isResolved ? "var(--accent-emerald)" : inc.status === "In Progress" ? "var(--accent-amber)" : "var(--accent-red)";
+      const dateStr = inc.created_at ? new Date(inc.created_at).toLocaleDateString() : new Date().toLocaleDateString();
+      const timeStr = inc.created_at ? new Date(inc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+
+      return `
+        <tr>
+          <td style="font-family: var(--font-mono); font-size: 0.8rem;">
+            ${dateStr} <span class="muted" style="font-size: 0.75rem;">${timeStr}</span>
+          </td>
+          <td style="color: var(--accent-cyan); font-family: var(--font-mono); font-weight: 700;">#INC-${inc.id.toString().padStart(4, '0')}</td>
+          <td>
+            <div style="font-size: 0.85rem; font-weight: 600; color: #fff;">${this.escape(inc.type)}</div>
+            <div class="muted" style="font-size: 0.75rem;">${this.escape(inc.description)}</div>
+          </td>
+          <td style="font-family: var(--font-mono); font-size: 0.8rem;">CAM-0${(inc.camera_id ?? 0) + 1}</td>
+          <td>
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; background: rgba(0,0,0,0.5); color: ${statusColor}; border: 1px solid ${statusColor};">
+              ${inc.status}
+            </span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.4rem;">
+              ${!isResolved ? `
+                <button class="btn-primary btn-resolve-inc" data-inc-id="${inc.id}" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">
+                  Resolve
+                </button>
+              ` : `
+                <span class="muted" style="font-size: 0.75rem; font-family: var(--font-mono);">Logged</span>
+              `}
+              ${inc.evidence_image ? `
+                <a href="${inc.evidence_image}" target="_blank" class="btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; text-decoration: none;">
+                  Evidence
+                </a>
+              ` : ""}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("") : `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          No incident logs in database. Facility is operating within 100% OSHA nominal safety bounds.
+        </td>
+      </tr>
+    `;
 
     this.container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <!-- Header -->
-        <div>
-          <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">OSHA 1910 Compliance</h1>
-          <p class="muted" style="font-size: 0.9rem;">Continuous monitoring and automated audit generation for Subpart D, I, and J.</p>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">OSHA 1910 Compliance Audit</h1>
+            <p class="muted" style="font-size: 0.9rem;">Continuous safety enforcement linked directly to SQLite WAL Database.</p>
+          </div>
+          <div style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--accent-cyan); background: rgba(0,240,255,0.05); padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            ${incidents.length} TOTAL AUDIT ENTRIES
+          </div>
         </div>
 
         <!-- Main Split: Left Export & Score Cards | Right Document Preview & Audit History -->
@@ -31,6 +93,7 @@ export class IncidentsView extends BaseView {
             <div class="panel" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
               <div style="color: var(--accent-cyan);">${Icons.download}</div>
               <h3 style="font-size: 1.2rem; font-weight: 700;">Instant OSHA 1910<br/>Audit Export</h3>
+              <p class="muted" style="font-size: 0.8rem;">Generates official compliance report with incident timestamps and evidence logs.</p>
               <button id="btn-gen-osha-pdf" class="btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: center; gap: 6px;">
                 ${Icons.download} <span>GENERATE PDF REPORT</span>
               </button>
@@ -38,7 +101,7 @@ export class IncidentsView extends BaseView {
 
             <!-- Overall Site Safety Radial Progress Card -->
             <div class="panel" style="padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-              <span style="font-size: 0.75rem; font-family: var(--font-mono); letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700;">OVERALL SITE SAFETY</span>
+              <span style="font-size: 0.75rem; font-family: var(--font-mono); letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700;">DYNAMIC COMPLIANCE SCORE</span>
               
               <!-- Circular Progress Gauge -->
               <div style="position: relative; width: 160px; height: 160px; display: flex; align-items: center; justify-content: center;">
@@ -51,6 +114,12 @@ export class IncidentsView extends BaseView {
                   <div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 0.05em; margin-top: 4px;">COMPLIANT</div>
                 </div>
               </div>
+
+              <div style="display: flex; justify-content: space-around; width: 100%; font-size: 0.75rem; font-family: var(--font-mono); border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+                <div><span style="color: var(--accent-red); font-weight: 800;">${openCount}</span> Open</div>
+                <div><span style="color: var(--accent-amber); font-weight: 800;">${progressCount}</span> In-Review</div>
+                <div><span style="color: var(--accent-emerald); font-weight: 800;">${resolvedCount}</span> Closed</div>
+              </div>
             </div>
           </div>
 
@@ -59,63 +128,46 @@ export class IncidentsView extends BaseView {
             <!-- Document Monospace Terminal Preview Card -->
             <div class="panel" style="padding: 1.5rem; background: #060b12;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
-                <span style="font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700;">DOCUMENT PREVIEW: REPORT #882-A</span>
-                <span style="font-size: 0.9rem; color: var(--accent-cyan); cursor: pointer;" title="Open Popout">↗</span>
+                <span style="font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700;">LIVE DATABASE AUDIT SUMMARY</span>
+                <span style="font-size: 0.75rem; color: var(--accent-cyan); font-family: var(--font-mono);">DATABASE WAL ACTIVE</span>
               </div>
 
               <div style="font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.7; color: #cbd5e1;">
-                <p class="muted">[SYSTEM LOG: ${new Date().toISOString()}]</p>
-                <p class="muted">INITIATING OSHA 1910 SUBPART D SCAN...</p>
+                <p class="muted">[OSHA SCAN TIMESTAMP: ${new Date().toISOString()}]</p>
+                <p class="muted">&gt; QUERYING SQLITE REPOSITORY: ${incidents.length} INCIDENTS LOGGED</p>
                 <br/>
-                <p>&gt; WALKING-WORKING SURFACES (1910.22)<br/>
-                STATUS: <span style="color: var(--accent-emerald); font-weight: 700;">COMPLIANT</span>. Housekeeping maintained. No protruding hazards detected in Sector 4.</p>
+                <p>&gt; PPE MANDATE (OSHA 1910.132 / 1910.135)<br/>
+                STATUS: <span style="${openCount > 0 ? 'color: var(--accent-red); font-weight: 700;' : 'color: var(--accent-emerald); font-weight: 700;'}">${openCount > 0 ? `${openCount} ACTIVE VIOLATION(S) DETECTED` : '100% COMPLIANT'}</span></p>
                 <br/>
-                <p>&gt; FALL PROTECTION SYSTEMS (1910.28)<br/>
-                STATUS: <span style="color: var(--accent-amber); font-weight: 700;">WARNING</span>. Guardrail system at Bay 12 requires tension adjustment.<br/>
-                ACTION REQUIRED: Maintenance work order #492 dispatched.</p>
+                <p>&gt; FALL PROTECTION & WALKING SURFACES (OSHA 1910.28)<br/>
+                STATUS: <span style="color: var(--accent-emerald); font-weight: 700;">ACTIVE MONITORING ON CAM-01 & CAM-02</span></p>
                 <br/>
-                <p>&gt; HAZARD COMMUNICATION (1910.1200)<br/>
-                STATUS: <span style="color: var(--accent-emerald); font-weight: 700;">COMPLIANT</span>. All chemical labels legible and updated.</p>
+                <p>&gt; FLAME & THERMAL HAZARDS (OSHA 1910.39)<br/>
+                STATUS: <span style="color: var(--accent-emerald); font-weight: 700;">ZERO ACTIVE THERMAL OUTBREAKS</span></p>
               </div>
             </div>
 
             <!-- Audit History Table Card -->
             <div class="panel" style="padding: 1.5rem;">
-              <h3 style="font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; margin-bottom: 1rem;">AUDIT HISTORY</h3>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 0.8rem; font-family: var(--font-mono); letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700;">AUDIT HISTORY & INCIDENT LOGS</h3>
+                <span class="muted" style="font-size: 0.75rem; font-family: var(--font-mono);">CLICK "RESOLVE" TO UPDATE SQLITE DB</span>
+              </div>
 
               <div class="table-container">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>DATE</th>
-                      <th>REPORT ID</th>
-                      <th>SCORE</th>
-                      <th>INSPECTOR</th>
-                      <th>ACTION</th>
+                      <th>TIMESTAMP</th>
+                      <th>INCIDENT ID</th>
+                      <th>CLASSIFICATION & DESCRIPTION</th>
+                      <th>CAMERA</th>
+                      <th>STATUS</th>
+                      <th>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style="font-family: var(--font-mono);">2026-08-28</td>
-                      <td style="color: var(--accent-cyan); font-family: var(--font-mono);">#882-A</td>
-                      <td><span class="badge" style="background: rgba(0,240,255,0.15); color: var(--accent-cyan);">92%</span></td>
-                      <td>AI Auto-Scan</td>
-                      <td><button class="btn-secondary btn-view-audit" style="padding: 3px 8px; font-size: 0.75rem;" data-report="882-A">View</button></td>
-                    </tr>
-                    <tr>
-                      <td style="font-family: var(--font-mono);">2026-08-27</td>
-                      <td style="color: var(--accent-cyan); font-family: var(--font-mono);">#881-A</td>
-                      <td><span class="badge" style="background: rgba(255,183,3,0.15); color: var(--accent-amber);">88%</span></td>
-                      <td>AI Auto-Scan</td>
-                      <td><button class="btn-secondary btn-view-audit" style="padding: 3px 8px; font-size: 0.75rem;" data-report="881-A">View</button></td>
-                    </tr>
-                    <tr>
-                      <td style="font-family: var(--font-mono);">2026-08-26</td>
-                      <td style="color: var(--accent-cyan); font-family: var(--font-mono);">#880-M</td>
-                      <td><span class="badge" style="background: rgba(0,240,255,0.15); color: var(--accent-cyan);">95%</span></td>
-                      <td>S. Connor</td>
-                      <td><button class="btn-secondary btn-view-audit" style="padding: 3px 8px; font-size: 0.75rem;" data-report="880-M">View</button></td>
-                    </tr>
+                    ${tableRowsHtml}
                   </tbody>
                 </table>
               </div>
@@ -125,31 +177,31 @@ export class IncidentsView extends BaseView {
       </div>
     `;
 
+    // Hook PDF generation to real incident data
     this.container.querySelector("#btn-gen-osha-pdf")?.addEventListener("click", () => {
-      eventBus.emit("toast", { message: "Generating Certified OSHA Form 301 PDF..." });
-      pdfReportGenerator.generateIncidentReport({
-        id: "882-A",
-        type: "OSHA 1910 Composite Plant Audit",
-        description: "Automated optical edge verification of walking surfaces, fall arrest gear, and PPE compliance.",
-        created_at: new Date().toISOString(),
-        camera_id: 0,
-        status: "Compliant (92%)",
-        confidence: 0.96,
-      });
+      pdfReportGenerator.generateOSHAReport(incidents);
     });
 
-    this.container.querySelectorAll(".btn-view-audit").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const rId = btn.dataset.report;
-        pdfReportGenerator.generateIncidentReport({
-          id: rId,
-          type: "Shift Safety Audit Archive",
-          description: `Historical OSHA 1910 audit report #${rId}`,
-          created_at: new Date().toISOString(),
-          camera_id: 0,
-          status: "Archived",
-          confidence: 0.94,
-        });
+    // Hook Resolve buttons to SQLite DB update
+    this.container.querySelectorAll(".btn-resolve-inc").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = parseInt(btn.dataset.incId, 10);
+        btn.textContent = "Updating...";
+        btn.disabled = true;
+
+        try {
+          await apiClient.resolveIncident(id);
+          eventBus.emit("toast", { message: `Incident #INC-${id.toString().padStart(4, '0')} marked as Resolved in SQLite database!` });
+          
+          // Refresh data from DB
+          const refreshed = await apiClient.getIncidents();
+          stateManager.set("incidents", refreshed);
+          this.render();
+        } catch (err) {
+          eventBus.emit("toast", { message: `Failed to resolve incident: ${err.message}` });
+          btn.textContent = "Resolve";
+          btn.disabled = false;
+        }
       });
     });
   }

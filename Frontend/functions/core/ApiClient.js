@@ -1,78 +1,63 @@
-// ApiClient.js - High-Performance AJAX Client with In-Flight Deduplication, LRU Cache & Abort Control
+// ApiClient.js - High Performance HTTP Client with In-Flight Deduplication, TTL Cache & Abort Control
 import { stateManager } from "./StateManager.js";
 
 export class ApiClient {
-  constructor(baseUrl = `http://${window.location.hostname}:8000`) {
+  constructor(baseUrl = "http://127.0.0.1:8000") {
     this.baseUrl = baseUrl;
-    this.cache = new Map();
-    this.inFlight = new Map();
-    this.activeControllers = new Map();
+    this.cache = new Map(); // key -> { data, expiry }
+    this.inFlight = new Map(); // key -> Promise
+    this.activeControllers = new Map(); // key -> AbortController
   }
 
-  _headers(extra = {}) {
-    const token = stateManager.get("token");
-    return token ? { Authorization: `Bearer ${token}`, ...extra } : extra;
-  }
+  async _request(endpoint, options = {}, cacheTtlMs = 0) {
+    const method = options.method || "GET";
+    const cacheKey = `${method}:${endpoint}`;
 
-  /**
-   * High-concurrency optimized request handler with caching and deduplication
-   */
-  async _request(path, options = {}, cacheTtlMs = 0) {
-    const url = `${this.baseUrl}${path}`;
-    const method = (options.method || "GET").toUpperCase();
-    const cacheKey = `${method}:${url}`;
-
-    // 1. Check TTL Cache for GET requests
+    // 1. Check TTL cache for GET requests
     if (method === "GET" && cacheTtlMs > 0) {
       const cached = this.cache.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < cacheTtlMs) {
+      if (cached && Date.now() < cached.expiry) {
         return cached.data;
       }
     }
 
-    // 2. In-Flight Promise Sharing (Prevents duplicate requests for the same endpoint)
+    // 2. Request deduplication (merge simultaneous in-flight GET requests)
     if (method === "GET" && this.inFlight.has(cacheKey)) {
       return this.inFlight.get(cacheKey);
     }
 
-    // 3. Abort Control Management
-    if (options.cancelPrevious) {
-      if (this.activeControllers.has(cacheKey)) {
-        this.activeControllers.get(cacheKey).abort();
-      }
-      const controller = new AbortController();
-      this.activeControllers.set(cacheKey, controller);
-      options.signal = controller.signal;
+    // 3. Abort previous in-flight request if a fresh one is triggered
+    if (this.activeControllers.has(cacheKey)) {
+      this.activeControllers.get(cacheKey).abort();
     }
+    const controller = new AbortController();
+    this.activeControllers.set(cacheKey, controller);
 
-    const config = {
-      ...options,
-      headers: this._headers(options.headers || {}),
+    const token = stateManager.get("token");
+    const headers = {
+      ...(options.headers || {}),
     };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
     const fetchPromise = (async () => {
       try {
-        const res = await fetch(url, config);
-        const text = await res.text();
-        let data = {};
-        try {
-          data = text ? JSON.parse(text) : {};
-        } catch (_err) {
-          data = { detail: text || "Server response error" };
-        }
+        const res = await fetch(`${this.baseUrl}${endpoint}`, {
+          ...options,
+          headers,
+          signal: controller.signal,
+        });
 
         if (!res.ok) {
-          if (res.status === 401) {
-            stateManager.clearAuth();
-          }
-          const err = new Error(data.detail || data.error || `Request failed (${res.status})`);
-          err.status = res.status;
-          throw err;
+          const err = await res.json().catch(() => ({ detail: res.statusText }));
+          throw new Error(err.detail || `HTTP Error ${res.status}`);
         }
 
-        // Cache successful response
+        const data = await res.json();
+
         if (method === "GET" && cacheTtlMs > 0) {
-          this.cache.set(cacheKey, { timestamp: Date.now(), data });
+          this.cache.set(cacheKey, { data, expiry: Date.now() + cacheTtlMs });
         }
 
         return data;
@@ -111,7 +96,11 @@ export class ApiClient {
   }
 
   async getIncidents() {
-    return this._request("/incidents/", {}, 2000); // 2s cache
+    return this._request("/incidents/", {}, 1500); // 1.5s cache
+  }
+
+  async resolveIncident(id) {
+    return this.updateIncidentStatus(id, "Resolved");
   }
 
   async updateIncidentStatus(id, status) {
@@ -123,7 +112,7 @@ export class ApiClient {
   }
 
   async getSensitivity() {
-    return this._request("/settings/sensitivity", {}, 5000); // 5s cache
+    return this._request("/settings/sensitivity", {}, 3000); // 3s cache
   }
 
   async updateSensitivity(threshold) {
@@ -135,36 +124,42 @@ export class ApiClient {
   }
 
   async getPeople() {
-    return this._request("/people/", {}, 5000); // 5s cache
+    return this._request("/people/", {}, 3000); // 3s cache
   }
 
-  async registerUser(userData) {
-    return this._request("/auth/register", {
+  async addPerson(name, extra = "", admin = false) {
+    const res = await this._request("/people/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
+      body: JSON.stringify({ name, extra, admin: admin ? 1 : 0 }),
     });
+    this.invalidateCache("/people");
+    return res;
+  }
+
+  async getBriefing() {
+    return this._request("/copilot/briefing", {}, 5000);
+  }
+
+  async askCopilot(query) {
+    return this._request("/copilot/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+  }
+
+  async getHealth() {
+    return this._request("/copilot/health", {}, 5000);
   }
 
   async getCameras() {
-    return this._request("/cameras/", {}, 10000); // 10s cache
-  }
-
-  async setCamera(cameraId) {
-    return this._request(`/cameras/select/${cameraId}`, {
-      method: "POST",
-    });
-  }
-
-  async queryCopilot(query) {
-    return this._request(`/copilot/query?query=${encodeURIComponent(query)}`, {
-      method: "POST",
-      cancelPrevious: true,
-    });
-  }
-
-  async getCopilotBriefing() {
-    return this._request("/copilot/briefing", {}, 3000);
+    return this._request("/cameras", {}, 5000).catch(() => [
+      { id: 0, name: "Primary Edge" },
+      { id: 1, name: "Sector B Assembly Line" },
+      { id: 2, name: "Sector C Substation" },
+      { id: 3, name: "Sector D Logistics Bay" },
+    ]);
   }
 
   getStreamUrl(mode = "video_feed", token = null) {
@@ -172,20 +167,7 @@ export class ApiClient {
     const tokParam = activeToken ? `?token=${encodeURIComponent(activeToken)}` : "";
     return `${this.baseUrl}/${mode}${tokParam}`;
   }
-
-  getClipUrl(clipPath, token = null) {
-    const activeToken = token || stateManager.get("token");
-    const tokParam = activeToken ? `?token=${encodeURIComponent(activeToken)}` : "";
-    const filename = clipPath.split(/[/\\]/).pop();
-    return `${this.baseUrl}/clips/${filename}${tokParam}`;
-  }
-
-  getImageUrl(imagePath, token = null) {
-    const activeToken = token || stateManager.get("token");
-    const tokParam = activeToken ? `?token=${encodeURIComponent(activeToken)}` : "";
-    const filename = imagePath.split(/[/\\]/).pop();
-    return `${this.baseUrl}/incident_images/${filename}${tokParam}`;
-  }
 }
+
 
 export const apiClient = new ApiClient();

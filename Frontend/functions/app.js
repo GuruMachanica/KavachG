@@ -43,10 +43,13 @@ export class VajraNetraApplication {
       this.switchTab("overview");
       this.refreshData();
       wsService.connect();
+      // Auto-poll database every 4 seconds
+      setInterval(() => this.refreshData(), 4000);
     } else {
       this._showLogin();
     }
   }
+
 
   _setupEvents() {
     // Tab switching
