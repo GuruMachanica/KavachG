@@ -1,13 +1,14 @@
-// StreamManager.js - Live Camera Stream Controller (Backend MJPEG + Direct Local WebCam)
 import { apiClient } from "../core/ApiClient.js";
 import { stateManager } from "../core/StateManager.js";
 import { eventBus } from "../core/EventBus.js";
+import { clientInferenceEngine } from "../core/ClientInferenceEngine.js";
 
 export class StreamManager {
-  constructor(imgElement, badgeTextElement, videoElement = null) {
+  constructor(imgElement, badgeTextElement, videoElement = null, canvasElement = null) {
     this.img = imgElement;
     this.badgeText = badgeTextElement;
     this.video = videoElement;
+    this.canvas = canvasElement;
     this.retryTimer = null;
     this.retryCount = 0;
     this.retryDelay = 1000;
@@ -62,9 +63,10 @@ export class StreamManager {
     };
   }
 
-  async startLocalWebcam(videoEl) {
+  async startLocalWebcam(videoEl, canvasEl = null) {
     clearTimeout(this.retryTimer);
     this.video = videoEl || this.video;
+    this.canvas = canvasEl || this.canvas || document.getElementById("zone-canvas");
 
     try {
       if (this.badgeText) {
@@ -85,8 +87,15 @@ export class StreamManager {
 
       this.isLocalWebcam = true;
       if (this.badgeText) {
-        this.badgeText.textContent = "LIVE: DIRECT LOCAL WEBCAM ACTIVE";
+        this.badgeText.textContent = "LIVE: ON-DEVICE WEBGPU INFERENCE (0ms)";
       }
+
+      // Start client in-browser inference engine
+      const activeMode = stateManager.get("liveMode") || "ppe";
+      clientInferenceEngine.init(this.video, this.canvas);
+      clientInferenceEngine.setMode(activeMode);
+      clientInferenceEngine.start();
+
       eventBus.emit("stream:local_connected");
     } catch (err) {
       console.warn("Direct webcam access unavailable, falling back to backend stream:", err);
@@ -96,12 +105,14 @@ export class StreamManager {
   }
 
   stopLocalWebcam() {
+    clientInferenceEngine.stop();
     if (this.localStream) {
       this.localStream.getTracks().forEach((t) => t.stop());
       this.localStream = null;
     }
     this.isLocalWebcam = false;
   }
+
 
   disconnect() {
     clearTimeout(this.retryTimer);

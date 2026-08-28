@@ -7,6 +7,8 @@ import { StreamManager } from "../ui/StreamManager.js";
 import { CanvasHUD } from "../ui/CanvasHUD.js";
 import { HeatmapEngine } from "../ui/HeatmapEngine.js";
 import { Icons } from "../ui/Icons.js";
+import { clientInferenceEngine } from "../core/ClientInferenceEngine.js";
+
 
 export class DetectionView extends BaseView {
   constructor() {
@@ -238,10 +240,15 @@ export class DetectionView extends BaseView {
         this.container.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
         if (this.streamManager) {
-          this.streamManager.connect(mode);
+          if (this.streamManager.isLocalWebcam) {
+            clientInferenceEngine.setMode(mode);
+          } else {
+            this.streamManager.connect(mode);
+          }
         }
       });
     });
+
 
     // Camera Dropdown Switcher
     this.container.querySelector("#camera-select-dropdown")?.addEventListener("change", async (e) => {
