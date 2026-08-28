@@ -5,13 +5,13 @@ from ultralytics import YOLO
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 MODEL_PATHS = [
-    os.path.join(BASE_DIR, "Models", "Pose", "best.pt"),
     os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.pt"),
-    os.path.join(BASE_DIR, "Models", "Pose", "last.pt"),
+    os.path.join(BASE_DIR, "Models", "Pose", "best.pt"),
+    os.path.join(BASE_DIR, "Models", "Pose", "yolov8s-pose.pt"),
 ]
 
-ONNX_PATH = os.path.join(BASE_DIR, "Models", "Pose", "best.onnx")
-ENGINE_PATH = os.path.join(BASE_DIR, "Models", "Pose", "best.engine")
+ONNX_PATH = os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.onnx")
+ENGINE_PATH = os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.engine")
 
 _pose_model = None
 _pose_model_path = None
@@ -79,6 +79,7 @@ def detect_pose(img):
     results = model(
         img,
         imgsz=640,
+        conf=0.25,
         device=device,
         half=half,
         verbose=False,

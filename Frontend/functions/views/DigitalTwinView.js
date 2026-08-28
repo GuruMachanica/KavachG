@@ -30,9 +30,14 @@ export class DigitalTwinView extends BaseView {
           </div>
         </div>
 
-        <!-- 3D Radar Digital Twin Viewport (with Floating Alert Card) -->
-        <div class="panel" style="position: relative; height: 440px; border-radius: 16px; overflow: hidden; background: radial-gradient(circle at center, #091a2a 0%, #03080e 100%);">
-          <div id="twin-viewport" style="width: 100%; height: 100%;"></div>
+        <!-- 3D Radar Digital Twin Viewport (with Floating Alert Card & 3D Orbit Controls) -->
+        <div class="panel" style="position: relative; height: 480px; border-radius: 16px; overflow: hidden; background: radial-gradient(circle at center, #091a2a 0%, #03080e 100%);">
+          <div id="twin-viewport" style="width: 100%; height: 100%; cursor: grab;"></div>
+
+          <!-- Bottom-Left 3D Orbit Controls Hint -->
+          <div style="position: absolute; bottom: 16px; left: 16px; font-size: 0.72rem; font-family: var(--font-mono); color: #94a3b8; background: rgba(3,7,18,0.8); border: 1px solid var(--border-subtle); padding: 6px 12px; border-radius: 6px; pointer-events: none;">
+            <span style="color: var(--accent-cyan); font-weight: 700;">3D SPATIAL CONTROLS:</span> Drag: Orbit 360° • Scroll: Zoom • Click Node: Focus Camera
+          </div>
 
           <!-- Floating Error Notification Card -->
           <div style="position: absolute; top: 20px; right: 20px; width: 280px; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--accent-amber); border-radius: 8px; padding: 0.9rem; box-shadow: 0 0 25px rgba(255, 183, 3, 0.2); backdrop-filter: blur(12px);">
@@ -48,6 +53,7 @@ export class DigitalTwinView extends BaseView {
             </a>
           </div>
         </div>
+
 
         <!-- 3 Environmental IoT Telemetry KPI Cards -->
         <div class="kpi-grid">
