@@ -53,11 +53,17 @@ def get_pose_model():
     return None
 
 
+def get_pose_model_error():
+    global _pose_model_error
+    return _pose_model_error
+
+
 def unload_pose_model() -> None:
     global _pose_model, _pose_model_path, _pose_model_error
     _pose_model = None
     _pose_model_path = None
     _pose_model_error = None
+
 
 
 def detect_pose(img, conf_threshold=0.25, device=None):
