@@ -2,25 +2,67 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/console", "destination": "/Frontend/console.html" },
-    { "source": "/modules", "destination": "/Frontend/modules.html" },
-    { "source": "/demo", "destination": "/Frontend/demo.html" },
-    { "source": "/architecture", "destination": "/Frontend/architecture.html" },
-    { "source": "/compliance", "destination": "/Frontend/compliance.html" },
-    { "source": "/benchmarks", "destination": "/Frontend/benchmarks.html" },
-    { "source": "/assets/(.*)", "destination": "/Frontend/assets/$1" },
-    { "source": "/styles/(.*)", "destination": "/Frontend/styles/$1" },
-    { "source": "/functions/(.*)", "destination": "/Frontend/functions/$1" },
-    { "source": "/", "destination": "/Frontend/index.html" },
-    { "source": "/(.*)", "destination": "/Frontend/$1" }
+    {
+      "source": "/console",
+      "destination": "/Frontend/console.html"
+    },
+    {
+      "source": "/modules",
+      "destination": "/Frontend/modules.html"
+    },
+    {
+      "source": "/demo",
+      "destination": "/Frontend/demo.html"
+    },
+    {
+      "source": "/architecture",
+      "destination": "/Frontend/architecture.html"
+    },
+    {
+      "source": "/compliance",
+      "destination": "/Frontend/compliance.html"
+    },
+    {
+      "source": "/benchmarks",
+      "destination": "/Frontend/benchmarks.html"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "/Frontend/assets/$1"
+    },
+    {
+      "source": "/styles/(.*)",
+      "destination": "/Frontend/styles/$1"
+    },
+    {
+      "source": "/functions/(.*)",
+      "destination": "/Frontend/functions/$1"
+    },
+    {
+      "source": "/",
+      "destination": "/Frontend/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/Frontend/$1"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors *;"
+        }
       ]
     }
   ]
