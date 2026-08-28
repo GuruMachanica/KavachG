@@ -1,4 +1,4 @@
-// DetectionView.js - Live Vision & Danger Zone HUD View (Clean SVG Icons, No Emojis)
+// DetectionView.js - Live Camera Stream & Multi-Mode Computer Vision Visualizer
 import { BaseView } from "./BaseView.js";
 import { stateManager } from "../core/StateManager.js";
 import { apiClient } from "../core/ApiClient.js";
@@ -23,11 +23,11 @@ export class DetectionView extends BaseView {
 
     const activeMode = stateManager.get("liveMode") || "video_feed";
     const modes = [
-      { id: "video_feed", label: "Raw Video", desc: "Unprocessed live optical feed" },
-      { id: "live/ppe", label: "PPE Compliance", desc: "Hardhat, safety vest & mask audit" },
-      { id: "live/fire-smoke", label: "Fire & Smoke", desc: "Thermal & optical flame localization" },
+      { id: "video_feed", label: "Raw Video", desc: "Unprocessed live optical camera feed" },
+      { id: "live/ppe", label: "PPE Compliance", desc: "Live hardhat, safety vest & mask IoU bounding" },
+      { id: "live/fire-smoke", label: "Fire & Smoke", desc: "Thermal & optical flame hazard localization" },
       { id: "live/fall", label: "Fall Detection", desc: "Temporal skeletal velocity & pose angle" },
-      { id: "live/pose", label: "Skeletal Pose", desc: "Full-body keypoint trajectory tracking" },
+      { id: "live/pose", label: "Skeletal Pose", desc: "17-point full-body keypoint tracking" },
     ];
 
     const cameras = stateManager.get("cameras") || [];
@@ -36,15 +36,15 @@ export class DetectionView extends BaseView {
 
     const singleCamHtml = `
       <div class="viewport-container panel">
-        <img id="live-stream-img" class="live-stream-img" src="assets/cctv_factory_1.jpg" onerror="this.src='assets/cctv_factory_1.jpg'" alt="Live Camera Stream" />
+        <img id="live-stream-img" class="live-stream-img" alt="Live Camera Stream" />
+        <video id="live-local-video" class="live-stream-img" autoplay playsinline muted style="display:none;"></video>
         <canvas id="zone-canvas" class="canvas-overlay"></canvas>
         <canvas id="heatmap-canvas" class="canvas-overlay" style="pointer-events: none; ${this.heatmapActive ? "" : "display:none;"}"></canvas>
 
-        
         <div class="viewport-hud">
           <div class="stream-status-badge">
             <span class="pulse-dot"></span>
-            <span id="stream-status-text">CONNECTING...</span>
+            <span id="stream-status-text">CONNECTING LIVE CAMERA...</span>
           </div>
 
           <div class="mode-selector">
@@ -62,8 +62,8 @@ export class DetectionView extends BaseView {
       <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 240px 240px; gap: 0.75rem; width: 100%;">
         ${[0, 1, 2, 3].map((camIdx) => `
           <div class="panel" style="position: relative; border-radius: 12px; overflow: hidden; background: #000; cursor: pointer;" data-matrix-cam="${camIdx}">
-            <img src="${apiClient.getStreamUrl(activeMode, token)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/photo.png'" />
-            <div style="position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--accent-cyan); border: 1px solid var(--border-subtle);">
+            <img src="${apiClient.getStreamUrl(activeMode, token)}&cam=${camIdx}&_t=${Date.now()}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/cctv_factory_${(camIdx % 2) + 1}.jpg'" />
+            <div style="position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.75); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--accent-cyan); border: 1px solid var(--border-subtle);">
               Camera #${camIdx} ${camIdx === selectedCam ? "• ACTIVE" : ""}
             </div>
             <div style="position: absolute; bottom: 8px; right: 8px; font-size: 0.7rem; color: #fff; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;">
@@ -74,9 +74,13 @@ export class DetectionView extends BaseView {
       </div>
     `;
 
-    const cameraOptions = cameras.map((c) =>
-      `<option value="${c.id}" ${c.id === selectedCam ? "selected" : ""}>${this.escape(c.name || `Camera #${c.id}`)}</option>`
-    ).join("");
+    const cameraOptions = `
+      <option value="0" ${selectedCam === 0 ? "selected" : ""}>Camera 0 (Live Hardware Cam / Primary Edge)</option>
+      <option value="webcam" ${selectedCam === "webcam" ? "selected" : ""}>Direct Local Device Webcam (Browser)</option>
+      <option value="1" ${selectedCam === 1 ? "selected" : ""}>Camera 1 (Sector B Assembly Line)</option>
+      <option value="2" ${selectedCam === 2 ? "selected" : ""}>Camera 2 (Sector C Substation)</option>
+      <option value="3" ${selectedCam === 3 ? "selected" : ""}>Camera 3 (Sector D Logistics Bay)</option>
+    `;
 
     this.container.innerHTML = `
       <div class="detection-grid">
@@ -107,7 +111,9 @@ export class DetectionView extends BaseView {
               <h3 style="font-size: 1rem;">Camera Control</h3>
             </div>
             <p class="muted" style="font-size: 0.8rem; margin-bottom: 0.5rem;">Select active edge stream feed</p>
-            <select id="camera-select-dropdown">${cameraOptions || `<option value="0">Camera 0 (Default)</option>`}</select>
+            <select id="camera-select-dropdown" style="width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-subtle); padding: 0.5rem; border-radius: 8px;">
+              ${cameraOptions}
+            </select>
           </div>
 
           <div>
@@ -129,7 +135,7 @@ export class DetectionView extends BaseView {
               <h3 style="font-size: 1rem;">Autonomous Watchdog</h3>
             </div>
             <p class="muted" style="font-size: 0.8rem; margin-bottom: 0.5rem;">Self-healing background capture engine active.</p>
-            <button id="reconnect-stream-btn" class="btn-secondary" style="width: 100%;">Force Stream Reset</button>
+            <button id="reconnect-stream-btn" class="btn-primary" style="width: 100%; font-size: 0.85rem; padding: 0.5rem;">Force Stream Reset / Reconnect</button>
           </div>
         </div>
       </div>
@@ -137,12 +143,19 @@ export class DetectionView extends BaseView {
 
     if (this.viewMode === "single") {
       const imgEl = this.container.querySelector("#live-stream-img");
+      const videoEl = this.container.querySelector("#live-local-video");
       const badgeEl = this.container.querySelector("#stream-status-text");
       const canvasEl = this.container.querySelector("#zone-canvas");
       const heatEl = this.container.querySelector("#heatmap-canvas");
 
-      this.streamManager = new StreamManager(imgEl, badgeEl);
-      this.streamManager.connect();
+      this.streamManager = new StreamManager(imgEl, badgeEl, videoEl);
+
+      if (selectedCam === "webcam") {
+        this.streamManager.startLocalWebcam(videoEl);
+      } else {
+        this.streamManager.connect(activeMode);
+      }
+
       this.canvasHUD = new CanvasHUD(canvasEl);
 
       if (heatEl) {
@@ -156,6 +169,7 @@ export class DetectionView extends BaseView {
       }
     }
 
+    // Single / Matrix Toggle
     this.container.querySelector("#view-single-btn")?.addEventListener("click", () => {
       this.viewMode = "single";
       this.render();
@@ -169,65 +183,74 @@ export class DetectionView extends BaseView {
       this.render();
     });
 
-    this.container.querySelectorAll("[data-matrix-cam]").forEach((tile) => {
-      tile.addEventListener("click", async () => {
-        const camId = parseInt(tile.dataset.matrixCam, 10);
-        stateManager.set("selectedCameraId", camId);
-        await apiClient.setMonitoringCamera(camId);
-        this.viewMode = "single";
-        this.render();
-      });
-    });
-
-    this.container.querySelectorAll(".mode-btn[data-mode]").forEach((btn) => {
+    // Mode Selector Buttons
+    this.container.querySelectorAll(".mode-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        stateManager.set("liveMode", btn.dataset.mode);
-        this.render();
-      });
-    });
-
-    const camDropdown = this.container.querySelector("#camera-select-dropdown");
-    if (camDropdown) {
-      camDropdown.addEventListener("change", async (e) => {
-        const camId = parseInt(e.target.value, 10);
-        try {
-          await apiClient.setMonitoringCamera(camId);
-          stateManager.set("selectedCameraId", camId);
-          eventBus.emit("toast", { message: `Camera switched to #${camId}` });
-          if (this.streamManager) this.streamManager.connect();
-        } catch (err) {
-          eventBus.emit("toast", { message: err.message, type: "error" });
+        const mode = btn.dataset.mode;
+        stateManager.set("liveMode", mode);
+        this.container.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (this.streamManager) {
+          this.streamManager.connect(mode);
         }
       });
-    }
-
-    const drawBtn = this.container.querySelector("#draw-zone-btn");
-    const statusMsg = this.container.querySelector("#zone-status-msg");
-    if (drawBtn) {
-      drawBtn.addEventListener("click", () => {
-        const isDrawing = !stateManager.get("isDrawingZone");
-        stateManager.set("isDrawingZone", isDrawing);
-        stateManager.set("zoneDraftPoints", []);
-        drawBtn.textContent = isDrawing ? "Click 4 Points" : "Draw Zone";
-        if (statusMsg) statusMsg.textContent = isDrawing ? "Drawing active: Click 4 corner points on feed." : "Ready.";
-        if (this.canvasHUD) this.canvasHUD.render();
-      });
-    }
-
-    const clearBtn = this.container.querySelector("#clear-zone-btn");
-    if (clearBtn) {
-      clearBtn.addEventListener("click", () => {
-        stateManager.set("zones", []);
-        stateManager.set("zoneDraftPoints", []);
-        stateManager.set("isDrawingZone", false);
-        if (this.canvasHUD) this.canvasHUD.render();
-        eventBus.emit("toast", { message: "Zone overlays cleared." });
-      });
-    }
-
-    this.container.querySelector("#reconnect-stream-btn")?.addEventListener("click", () => {
-      eventBus.emit("toast", { message: "Resetting camera capture pipeline..." });
-      if (this.streamManager) this.streamManager.forceReset();
     });
+
+    // Camera Dropdown Switcher
+    this.container.querySelector("#camera-select-dropdown")?.addEventListener("change", async (e) => {
+      const val = e.target.value;
+      if (val === "webcam") {
+        stateManager.set("selectedCameraId", "webcam");
+        const videoEl = this.container.querySelector("#live-local-video");
+        if (this.streamManager) this.streamManager.startLocalWebcam(videoEl);
+      } else {
+        const camId = parseInt(val, 10);
+        stateManager.set("selectedCameraId", camId);
+        try {
+          await apiClient.setCamera(camId);
+        } catch (_) {}
+        if (this.streamManager) {
+          this.streamManager.stopLocalWebcam();
+          this.streamManager.connect(stateManager.get("liveMode") || "video_feed");
+        }
+      }
+    });
+
+    // Force Stream Reset
+    this.container.querySelector("#reconnect-stream-btn")?.addEventListener("click", () => {
+      if (this.streamManager) {
+        this.streamManager.forceReset();
+        eventBus.emit("toast", { message: "Resetting optical video stream engine..." });
+      }
+    });
+
+    // Danger Zone Polygon Tool
+    const drawBtn = this.container.querySelector("#draw-zone-btn");
+    const clearBtn = this.container.querySelector("#clear-zone-btn");
+    const statusMsg = this.container.querySelector("#zone-status-msg");
+
+    drawBtn?.addEventListener("click", () => {
+      if (this.canvasHUD) {
+        this.canvasHUD.startDrawing((points) => {
+          if (statusMsg) statusMsg.textContent = `Polygon Perimeter active: ${points.length} vertices locked.`;
+          drawBtn.classList.remove("btn-primary");
+        });
+        drawBtn.classList.add("btn-primary");
+        if (statusMsg) statusMsg.textContent = "Click 4 points on the viewport to define exclusion zone.";
+      }
+    });
+
+    clearBtn?.addEventListener("click", () => {
+      if (this.canvasHUD) {
+        this.canvasHUD.clear();
+        if (statusMsg) statusMsg.textContent = "Exclusion fence cleared.";
+      }
+    });
+  }
+
+  destroy() {
+    if (this.streamManager) {
+      this.streamManager.disconnect();
+    }
   }
 }

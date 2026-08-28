@@ -109,7 +109,6 @@ def init_db():
 
         # 4. Settings Table
         c.execute("""CREATE TABLE IF NOT EXISTS settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
             confidence_threshold REAL DEFAULT 0.5,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""")
@@ -121,6 +120,8 @@ def init_db():
         ensure_column(c, "incidents", "confidence", "REAL DEFAULT 0.0")
 
         # Seed initial setting if not present
-        c.execute("SELECT id FROM settings WHERE id = 1")
-        if not c.fetchone():
-            c.execute("INSERT INTO settings (id, confidence_threshold) VALUES (1, 0.5)")
+        c.execute("SELECT count(*) as cnt FROM settings")
+        row = c.fetchone()
+        if not row or row["cnt"] == 0:
+            c.execute("INSERT INTO settings (confidence_threshold) VALUES (0.5)")
+
