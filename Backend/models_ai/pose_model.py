@@ -1,17 +1,18 @@
 import os
-
+import torch
 import cv2
 from ultralytics import YOLO
 
-
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 MODEL_PATHS = [
-    os.path.join(os.path.dirname(__file__), "../Models/Pose/Pose/best.pt"),
-    os.path.join(os.path.dirname(__file__), "../Models/Pose/Pose/last.pt"),
-    os.path.join(
-        os.path.dirname(__file__),
-        "../Models/Fall_Detection/yolov8s-pose.pt",
-    ),
+    os.path.join(BASE_DIR, "Models", "Pose", "best.pt"),
+    os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.pt"),
+    os.path.join(BASE_DIR, "Models", "Pose", "last.pt"),
 ]
+
+ONNX_PATH = os.path.join(BASE_DIR, "Models", "Pose", "best.onnx")
+ENGINE_PATH = os.path.join(BASE_DIR, "Models", "Pose", "best.engine")
+
 _pose_model = None
 _pose_model_path = None
 _pose_model_error = None
@@ -23,6 +24,23 @@ def get_pose_model():
         return _pose_model
 
     _pose_model_error = None
+
+    if os.path.exists(ENGINE_PATH) and torch.cuda.is_available():
+        try:
+            _pose_model = YOLO(ENGINE_PATH, task="pose")
+            _pose_model_path = ENGINE_PATH
+            return _pose_model
+        except Exception:
+            pass
+
+    if os.path.exists(ONNX_PATH):
+        try:
+            _pose_model = YOLO(ONNX_PATH, task="pose")
+            _pose_model_path = ONNX_PATH
+            return _pose_model
+        except Exception:
+            pass
+
     for model_path in MODEL_PATHS:
         if not os.path.exists(model_path):
             continue
@@ -30,7 +48,7 @@ def get_pose_model():
             _pose_model = YOLO(model_path, task="pose")
             _pose_model_path = model_path
             return _pose_model
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             _pose_model_error = str(exc)
 
     return _pose_model
@@ -50,21 +68,21 @@ def get_pose_model_path() -> str | None:
     return _pose_model_path
 
 
-import torch
-
 def detect_pose(img):
     model = get_pose_model()
     if not model:
         return []
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    half = True if device == "cuda" else False
+    
     results = model(
         img,
         imgsz=640,
         device=device,
+        half=half,
         verbose=False,
     )
-
 
     detections = []
     for result in results:
@@ -80,14 +98,15 @@ def detect_pose(img):
 
             detections.append(
                 {
-                    "bbox": [
+                    "box": [
                         int(box.xyxy[0][0]),
                         int(box.xyxy[0][1]),
                         int(box.xyxy[0][2]),
                         int(box.xyxy[0][3]),
                     ],
                     "confidence": float(box.conf[0]),
-                    "label": "pose",
+                    "label": f"Worker #{idx + 1}: Pose Tracked",
+                    "compliant": True,
                     "keypoints": keypoints,
                 }
             )
