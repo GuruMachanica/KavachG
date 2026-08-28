@@ -6,9 +6,10 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Install system dependencies (using libgl1 instead of obsolete libgl1-mesa-glx)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libgomp1 \
     ffmpeg \
@@ -16,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY Backend/requirements.txt /app/Backend/requirements.txt
-RUN pip install --no-cache-dir -r /app/Backend/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /app/Backend/requirements.txt
 
 COPY Backend/ /app/Backend/
 COPY Models/ /app/Models/
@@ -26,4 +28,4 @@ COPY Frontend/ /app/Frontend/
 EXPOSE 8000 5500
 
 WORKDIR /app/Backend
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]

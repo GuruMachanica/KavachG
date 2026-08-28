@@ -1,6 +1,8 @@
 fastapi
-uvicorn
-opencv-python
+uvicorn[standard]
+websockets
+wsproto
+opencv-python-headless
 ultralytics
 numpy
 python-multipart
