@@ -1,0 +1,19 @@
+# Robots.txt for VajraNetra Industrial AI Safety Platform
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /modules.html
+Allow: /demo.html
+Allow: /architecture.html
+Allow: /compliance.html
+Allow: /benchmarks.html
+
+# Disallow indexing of private backend endpoints and forensic evidence
+Disallow: /api/
+Disallow: /clips/
+Disallow: /incident_reports/
+Disallow: /incident_images/
+Disallow: /database/
+
+# Sitemap Location
+Sitemap: https://vajranetra.ai/sitemap.xml
