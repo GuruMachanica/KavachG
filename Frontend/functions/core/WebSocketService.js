@@ -29,10 +29,18 @@ export class WebSocketService {
       this.ws.onopen = () => {
         this.retryDelay = 2000;
         eventBus.emit("ws:connected");
+        // Start keepalive ping
+        if (this.pingInterval) clearInterval(this.pingInterval);
+        this.pingInterval = setInterval(() => {
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send("ping");
+          }
+        }, 20000);
       };
 
       this.ws.onmessage = (evt) => {
         try {
+          if (evt.data === "pong") return;
           const msg = JSON.parse(evt.data);
           if (msg.type === "incident") {
             audioAlertEngine.playAlert("danger");
@@ -43,6 +51,7 @@ export class WebSocketService {
       };
 
       this.ws.onclose = () => {
+        if (this.pingInterval) clearInterval(this.pingInterval);
         eventBus.emit("ws:disconnected");
         clearTimeout(this.retryTimer);
         this.retryTimer = setTimeout(() => {
@@ -50,6 +59,7 @@ export class WebSocketService {
           this.connect();
         }, this.retryDelay);
       };
+
     } catch (_err) {
       // Connect error
     }

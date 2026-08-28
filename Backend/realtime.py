@@ -1,6 +1,7 @@
-# realtime.py - WebSocket manager for incident updates
+# realtime.py - Self-Healing WebSocket Manager for Realtime Incident Broadcasts
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List
+import asyncio
 
 router = APIRouter()
 
@@ -18,8 +19,11 @@ class ConnectionManager:
             self.active_connections.remove(websocket)
 
     async def broadcast(self, message: dict):
-        for connection in self.active_connections:
-            await connection.send_json(message)
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(message)
+            except Exception:
+                self.disconnect(connection)
 
 
 manager = ConnectionManager()
@@ -29,9 +33,17 @@ manager = ConnectionManager()
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
+        await websocket.send_json({"type": "connected", "status": "active", "service": "KavachG Incident Stream"})
         while True:
-            await websocket.receive_text()  # Keep connection alive
+            try:
+                data = await websocket.receive_text()
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except Exception:
+                break
     except WebSocketDisconnect:
+        pass
+    finally:
         manager.disconnect(websocket)
 
 
