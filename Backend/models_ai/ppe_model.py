@@ -15,16 +15,28 @@ CLASS_NAMES = [
     "machinery",
     "vehicle",
 ]
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__), "../Models/PPE-Detection/ppe.pt"
-)
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+MODEL_PATH = os.path.join(BASE_DIR, "Models", "PPE-Detection", "ppe.pt")
+ONNX_PATH = os.path.join(BASE_DIR, "Models", "PPE-Detection", "ppe.onnx")
+ENGINE_PATH = os.path.join(BASE_DIR, "Models", "PPE-Detection", "ppe.engine")
+
 _ppe_model = None
 
 
 def get_ppe_model():
     global _ppe_model
-    if _ppe_model is None and os.path.exists(MODEL_PATH):
-        _ppe_model = YOLO(MODEL_PATH)
+    if _ppe_model is None:
+        target_path = None
+        if os.path.exists(ENGINE_PATH) and torch.cuda.is_available():
+            target_path = ENGINE_PATH
+        elif os.path.exists(ONNX_PATH):
+            target_path = ONNX_PATH
+        elif os.path.exists(MODEL_PATH):
+            target_path = MODEL_PATH
+
+        if target_path:
+            _ppe_model = YOLO(target_path)
     return _ppe_model
 
 
@@ -34,7 +46,6 @@ def unload_ppe_model() -> None:
 
 
 def _calculate_iou(boxA, boxB):
-    # Determine intersection rectangle
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
@@ -44,95 +55,98 @@ def _calculate_iou(boxA, boxB):
     boxAArea = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
     boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
 
-    if boxAArea + boxBArea - interArea == 0:
+    unionArea = float(boxAArea + boxBArea - interArea)
+    if unionArea <= 0:
         return 0.0
-    return interArea / float(boxAArea + boxBArea - interArea)
+    return interArea / unionArea
 
 
-def _is_inside_or_overlapping(gear_box, person_box, min_overlap=0.3):
-    """Checks if gear box is primarily contained within person bounding box."""
-    gx1, gy1, gx2, gy2 = gear_box
-    px1, py1, px2, py2 = person_box
-
-    # Calculate gear area
-    g_area = max(1, (gx2 - gx1) * (gy2 - gy1))
-    
-    # Intersection area
-    ix1 = max(gx1, px1)
-    iy1 = max(gy1, py1)
-    ix2 = min(gx2, px2)
-    iy2 = min(gy2, py2)
-    
-    inter_w = max(0, ix2 - ix1)
-    inter_h = max(0, iy2 - iy1)
-    inter_area = inter_w * inter_h
-
-    return (inter_area / float(g_area)) >= min_overlap
-
-
-def detect_ppe(img, conf_threshold=0.25):
+def detect_ppe(img, conf_threshold=0.3, iou_threshold=0.2, device=None):
     model = get_ppe_model()
     if not model:
         return []
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    results = model(img, conf=conf_threshold, device=device, verbose=False)
-    detections = []
-    
-    person_boxes = []
-    gear_items = []
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    half_precision = True if device == "cuda" else False
 
-    model_names = getattr(model, "names", CLASS_NAMES)
+    results = model(img, conf=conf_threshold, device=device, half=half_precision, verbose=False)
+    persons = []
+    gear_items = []
+    model_names = getattr(model, "names", {})
 
     for r in results:
-        boxes = getattr(r, "boxes", None)
-        if boxes is None:
-            continue
+        boxes = r.boxes
         for box in boxes:
-            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            x1, y1, x2, y2 = box.xyxy[0]
             conf = float(box.conf[0])
             cls = int(box.cls[0])
-            
-            if isinstance(model_names, dict):
-                raw_label = model_names.get(cls, str(cls))
-            elif isinstance(model_names, list) and cls < len(model_names):
-                raw_label = model_names[cls]
+            raw_label = model_names.get(cls, str(cls))
+            label = str(raw_label).strip().lower()
+
+            box_coords = [int(x1), int(y1), int(x2), int(y2)]
+
+            if label in ["person", "worker"]:
+                persons.append(
+                    {
+                        "box": box_coords,
+                        "confidence": conf,
+                        "has_helmet": False,
+                        "has_vest": False,
+                    }
+                )
             else:
-                raw_label = str(cls)
+                gear_items.append(
+                    {"box": box_coords, "label": label, "confidence": conf}
+                )
 
-            item = {
-                "bbox": [int(x1), int(y1), int(x2), int(y2)],
-                "confidence": round(conf, 2),
-                "label": raw_label,
-            }
-
-            if raw_label.lower() == "person":
-                person_boxes.append(item)
-            else:
-                gear_items.append(item)
-
-    # Hierarchical Association: Link gear to individual persons
-    for p_idx, person in enumerate(person_boxes):
-        p_box = person["bbox"]
-        associated_gear = []
-        violations = []
-
+    # IoU person-to-gear association
+    for person in persons:
+        p_box = person["box"]
         for gear in gear_items:
-            if _is_inside_or_overlapping(gear["bbox"], p_box):
-                associated_gear.append(gear["label"])
-                if "NO-" in gear["label"]:
-                    violations.append(gear["label"])
+            g_box = gear["box"]
+            iou = _calculate_iou(p_box, g_box)
+            g_label = gear["label"]
 
-        worker_status = "Non-Compliant" if violations else "Compliant"
-        person["worker_id"] = p_idx + 1
-        person["status"] = worker_status
-        person["violations"] = violations
-        person["gear"] = associated_gear
-        detections.append(person)
+            if iou > iou_threshold:
+                if any(k in g_label for k in ["hardhat", "helmet"]):
+                    if not any(k in g_label for k in ["no-", "no_"]):
+                        person["has_helmet"] = True
+                elif any(k in g_label for k in ["vest", "jacket"]):
+                    if not any(k in g_label for k in ["no-", "no_"]):
+                        person["has_vest"] = True
 
-    # Also include raw gear detections for canvas overlays
-    for gear in gear_items:
-        detections.append(gear)
+    detections = []
+    for p in persons:
+        is_compliant = p["has_helmet"] and p["has_vest"]
+        verdict = (
+            "COMPLIANT"
+            if is_compliant
+            else (
+                "NO-HARDHAT & NO-VEST"
+                if not p["has_helmet"] and not p["has_vest"]
+                else ("NO-HARDHAT" if not p["has_helmet"] else "NO-SAFETY VEST")
+            )
+        )
+        detections.append(
+            {
+                "box": p["box"],
+                "confidence": p["confidence"],
+                "class_id": 0,
+                "label": f"Worker: {verdict}",
+                "compliant": is_compliant,
+            }
+        )
+
+    for g in gear_items:
+        detections.append(
+            {
+                "box": g["box"],
+                "confidence": g["confidence"],
+                "class_id": 1,
+                "label": g["label"],
+                "compliant": not g["label"].startswith("no-"),
+            }
+        )
 
     return detections
-

@@ -5,22 +5,28 @@ import numpy as np
 import torch
 from ultralytics import YOLO
 
-# Load the pose model for fall detection
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "../Models/Fall_Detection/yolov8s-pose.pt",
-)
-_fall_model = None
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+MODEL_PATH = os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.pt")
+ONNX_PATH = os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.onnx")
+ENGINE_PATH = os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.engine")
 
-# Track person states across frames for temporal fall analysis
-# dict: track_id -> {"last_hip_y": float, "last_time": float, "fall_counter": int}
+_fall_model = None
 _person_history = {}
 
 
 def get_fall_model():
     global _fall_model
-    if _fall_model is None and os.path.exists(MODEL_PATH):
-        _fall_model = YOLO(MODEL_PATH, task="pose")
+    if _fall_model is None:
+        target_path = None
+        if os.path.exists(ENGINE_PATH) and torch.cuda.is_available():
+            target_path = ENGINE_PATH
+        elif os.path.exists(ONNX_PATH):
+            target_path = ONNX_PATH
+        elif os.path.exists(MODEL_PATH):
+            target_path = MODEL_PATH
+
+        if target_path:
+            _fall_model = YOLO(target_path, task="pose")
     return _fall_model
 
 
@@ -30,7 +36,6 @@ def unload_fall_model() -> None:
 
 
 def _calculate_angle_with_horizontal(p1, p2):
-    """Calculates angle of line (p1 -> p2) with the horizontal ground plane (0 = horizontal, 90 = vertical)."""
     dx = p2[0] - p1[0]
     dy = p2[1] - p1[1]
     if dx == 0 and dy == 0:
@@ -39,102 +44,95 @@ def _calculate_angle_with_horizontal(p1, p2):
     return np.degrees(angle_rad)
 
 
-def detect_fall(img, conf_threshold=0.35):
+def detect_fall(
+    img,
+    conf_threshold=0.5,
+    angle_threshold=38.0,
+    velocity_threshold=40.0,
+    persistence_frames=2,
+    device=None,
+):
+    global _person_history
     model = get_fall_model()
     if not model:
         return []
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    results = model(img, imgsz=640, device=device, verbose=False)
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    half_precision = True if device == "cuda" else False
+
+    results = model(img, conf=conf_threshold, device=device, half=half_precision, verbose=False)
     detections = []
     current_time = time.time()
 
-    for result in results:
-        boxes = getattr(result, "boxes", None)
-        kpts = getattr(result, "keypoints", None)
-        if boxes is None or len(boxes) == 0:
+    for r in results:
+        boxes = r.boxes
+        keypoints = r.keypoints
+
+        if boxes is None or keypoints is None:
             continue
 
-        for idx, box in enumerate(boxes):
-            try:
-                conf = float(box.conf[0])
-                if conf < conf_threshold:
-                    continue
+        for i, box in enumerate(boxes):
+            x1, y1, x2, y2 = box.xyxy[0]
+            conf = float(box.conf[0])
+            box_coords = [int(x1), int(y1), int(x2), int(y2)]
 
-                xyxy = box.xyxy[0].tolist()
-                x1, y1, x2, y2 = int(xyxy[0]), int(xyxy[1]), int(xyxy[2]), int(xyxy[3])
-                w = max(1, x2 - x1)
-                h = max(1, y2 - y1)
-                aspect_ratio = w / float(h)
-
-                is_fall = False
-                confidence_score = conf
-                spine_angle = 90.0
-
-                # Analyze Pose Keypoints if available
-                if kpts is not None and hasattr(kpts, "xy") and idx < len(kpts.xy):
-                    kp = kpts.xy[idx].cpu().numpy()  # shape (17, 2)
-                    
-                    # Keypoints mapping for COCO Pose:
-                    # 5: left_shoulder, 6: right_shoulder, 11: left_hip, 12: right_hip
-                    # 13: left_knee, 14: right_knee, 15: left_ankle, 16: right_ankle
-                    if len(kp) >= 17:
-                        left_shoulder, right_shoulder = kp[5], kp[6]
-                        left_hip, right_hip = kp[11], kp[12]
-
-                        has_shoulders = (left_shoulder[0] > 0 or right_shoulder[0] > 0)
-                        has_hips = (left_hip[0] > 0 or right_hip[0] > 0)
-
-                        if has_shoulders and has_hips:
-                            # Midpoint of shoulders
-                            shoulder_mid = [
-                                (left_shoulder[0] + right_shoulder[0]) / 2.0,
-                                (left_shoulder[1] + right_shoulder[1]) / 2.0,
-                            ]
-                            # Midpoint of hips
-                            hip_mid = [
-                                (left_hip[0] + right_hip[0]) / 2.0,
-                                (left_hip[1] + right_hip[1]) / 2.0,
-                            ]
-
-                            spine_angle = _calculate_angle_with_horizontal(shoulder_mid, hip_mid)
-                            
-                            # Fall criterion: Spine angle < 38 degrees (horizontal) AND box aspect ratio > 1.15
-                            if spine_angle < 38.0 and aspect_ratio > 1.1:
-                                is_fall = True
-                            elif spine_angle < 25.0:
-                                is_fall = True
-
-                # Fallback to aspect ratio only if keypoints could not be resolved
-                if not is_fall and aspect_ratio > 1.6 and h < 180:
-                    is_fall = True
-
-                label = "Fallen" if is_fall else "Stable"
-                color = (0, 0, 255) if is_fall else (0, 255, 0)
-
-                # Overlay box and status on image
-                cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
-                cv2.putText(
-                    img,
-                    f"{label} ({int(spine_angle)}deg)",
-                    (x1, max(20, y1 - 8)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    color,
-                    2,
-                )
-
-                detections.append(
-                    {
-                        "bbox": [x1, y1, x2, y2],
-                        "confidence": float(conf),
-                        "label": label,
-                        "spine_angle": float(spine_angle),
-                        "aspect_ratio": round(aspect_ratio, 2),
-                    }
-                )
-            except Exception:
+            kpts = keypoints[i].data[0].cpu().numpy()
+            if len(kpts) < 17:
                 continue
 
-    return detections
+            left_shoulder = kpts[5][:2]
+            right_shoulder = kpts[6][:2]
+            left_hip = kpts[11][:2]
+            right_hip = kpts[12][:2]
 
+            # Midpoints for spine vector
+            mid_shoulder = (left_shoulder + right_shoulder) / 2.0
+            mid_hip = (left_hip + right_hip) / 2.0
+
+            # Spine angle with horizontal
+            spine_angle = _calculate_angle_with_horizontal(mid_shoulder, mid_hip)
+
+            # Spatial vertical velocity calculation
+            current_hip_y = mid_hip[1]
+            track_key = f"{int(x1/50)}_{int(x2/50)}"
+            velocity = 0.0
+
+            if track_key in _person_history:
+                last_state = _person_history[track_key]
+                dt = max(0.01, current_time - last_state["last_time"])
+                dy = current_hip_y - last_state["last_hip_y"]
+                velocity = dy / dt
+
+                if spine_angle < angle_threshold:
+                    last_state["fall_counter"] += 1
+                else:
+                    last_state["fall_counter"] = max(0, last_state["fall_counter"] - 1)
+
+                last_state["last_hip_y"] = current_hip_y
+                last_state["last_time"] = current_time
+            else:
+                _person_history[track_key] = {
+                    "last_hip_y": current_hip_y,
+                    "last_time": current_time,
+                    "fall_counter": 1 if spine_angle < angle_threshold else 0,
+                }
+
+            fall_counter = _person_history[track_key]["fall_counter"]
+            is_fall = (fall_counter >= persistence_frames) or (
+                spine_angle < angle_threshold and velocity > velocity_threshold
+            )
+
+            detections.append(
+                {
+                    "box": box_coords,
+                    "confidence": conf,
+                    "class_id": 1 if is_fall else 0,
+                    "label": f"{'FALL DETECTED' if is_fall else 'Standing/Nominal'} (Angle: {spine_angle:.1f}°)",
+                    "fall": is_fall,
+                    "spine_angle": float(spine_angle),
+                    "velocity": float(velocity),
+                }
+            )
+
+    return detections
