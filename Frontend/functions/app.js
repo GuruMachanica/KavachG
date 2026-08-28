@@ -102,11 +102,27 @@ export class KavachGApplication {
       });
     });
 
+    // Global Universal Command & Search Palette (Ctrl+K or Search Bar click)
+    const openPalette = () => {
+      modalManager.showCommandPalette();
+    };
+
+    document.getElementById("global-search-bar")?.addEventListener("click", openPalette);
+    document.getElementById("global-search-input")?.addEventListener("click", openPalette);
+
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openPalette();
+      }
+    });
+
     document.getElementById("btn-new-audit")?.addEventListener("click", () => {
       this.switchTab("incidents");
       this.closeMobileSidebar();
       this.showToast("Initiating rapid OSHA 1910 subpart inspection...");
     });
+
 
     // Support Modal
     document.getElementById("sidebar-support-btn")?.addEventListener("click", () => {

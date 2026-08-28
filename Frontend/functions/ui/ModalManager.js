@@ -254,6 +254,148 @@ export class ModalManager {
     this.modal.classList.remove("hidden");
   }
 
+  showCommandPalette(initialQuery = "") {
+    if (!this.modal) return;
+
+    this.title.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="color: var(--accent-cyan);">${Icons.search || "🔍"}</span>
+        <span>Universal Command & Search Engine</span>
+      </div>
+    `;
+
+    const people = stateManager.get("people") || [];
+    const incidents = stateManager.get("incidents") || [];
+
+    this.body.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="position: relative;">
+          <input id="palette-search-input" type="text" placeholder="Type to search personnel, incidents, or commands..." value="${initialQuery}" style="width: 100%; background: rgba(0,240,255,0.06); color: #fff; border: 1px solid var(--border-glow); padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.95rem; font-family: var(--font-sans);" autofocus />
+        </div>
+
+        <div id="palette-results" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.4rem; padding-right: 4px;">
+          <!-- Dynamic Results Injected Here -->
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); border-top: 1px solid var(--border-subtle); padding-top: 0.5rem;">
+          <span>↑↓ Navigate • Enter Select • Esc Close</span>
+          <span style="color: var(--accent-cyan);">KavachG Unified Core</span>
+        </div>
+      </div>
+    `;
+
+    const inputEl = document.getElementById("palette-search-input");
+    const resultsEl = document.getElementById("palette-results");
+
+    const commands = [
+      { type: "NAV", title: "Open Live Vision & Detection", desc: "Real-time edge camera feeds with PPE bounding", action: () => eventBus.emit("nav:tab", "detection") },
+      { type: "NAV", title: "Open 3D Plant Digital Twin", desc: "Sector Alpha spatial Metaverse & vision cones", action: () => eventBus.emit("nav:tab", "digitaltwin") },
+      { type: "NAV", title: "Open AI Safety Copilot", desc: "OSHA regulatory reasoning & incident query", action: () => eventBus.emit("nav:tab", "copilot") },
+      { type: "NAV", title: "Open Incident Audits & Records", desc: "OSHA Form 301 incident ledger and logs", action: () => eventBus.emit("nav:tab", "incidents") },
+      { type: "NAV", title: "Open Overview Dashboard", desc: "KPI metrics, active workers, compliance rating", action: () => eventBus.emit("nav:tab", "overview") },
+      { type: "ACTION", title: "Toggle Autonomous Swarm Patrol", desc: "Auto-cycle camera sectors and triage hazards", action: async () => { await apiClient.toggleSwarmPatrol(); eventBus.emit("toast", { message: "Swarm Patrol toggled" }); } },
+      { type: "ACTION", title: "Export OSHA 301 Summary Report (PDF)", desc: "Generate compliance PDF audit package", action: () => { eventBus.emit("nav:tab", "incidents"); pdfReportGenerator.generatePDF(incidents); } },
+      { type: "ACTION", title: "Sound Audio Alert Alarm", desc: "Trigger 90dB alert siren test", action: () => eventBus.emit("incident:alert", { type: "MANUAL TEST ALARM", location: "Console" }) },
+    ];
+
+    const renderResults = (query = "") => {
+      const q = query.toLowerCase().trim();
+      let html = "";
+
+      // 1. Matched Commands & Navigation
+      const matchedCmds = commands.filter((c) => !q || c.title.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q));
+      if (matchedCmds.length > 0) {
+        html += `<div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--accent-cyan); text-transform: uppercase; margin-top: 0.25rem; font-weight: 700;">Commands & Navigation</div>`;
+        matchedCmds.forEach((c, idx) => {
+          html += `
+            <div class="palette-item" data-type="cmd" data-idx="${commands.indexOf(c)}" style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; cursor: pointer; transition: all 0.15s ease;">
+              <div>
+                <strong style="color: #fff; font-size: 0.85rem;">${c.title}</strong>
+                <p class="muted" style="font-size: 0.75rem;">${c.desc}</p>
+              </div>
+              <span class="badge" style="font-size: 0.65rem; background: rgba(0,240,255,0.15); color: var(--accent-cyan);">${c.type}</span>
+            </div>
+          `;
+        });
+      }
+
+      // 2. Matched Personnel from SQLite Database
+      const matchedPeople = people.filter((p) => !q || p.name.toLowerCase().includes(q) || (p.extra && p.extra.toLowerCase().includes(q)));
+      if (matchedPeople.length > 0) {
+        html += `<div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--accent-emerald); text-transform: uppercase; margin-top: 0.5rem; font-weight: 700;">Personnel Directory (${matchedPeople.length})</div>`;
+        matchedPeople.slice(0, 5).forEach((p) => {
+          html += `
+            <div class="palette-item" data-type="person" data-id="${p.id}" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; cursor: pointer;">
+              <div>
+                <strong style="color: #e2e8f0; font-size: 0.85rem;">${p.name}</strong>
+                <p class="muted" style="font-size: 0.75rem;">${p.extra || "Floor Staff"} • Active</p>
+              </div>
+              <span class="badge" style="font-size: 0.65rem; background: rgba(0,229,163,0.15); color: var(--accent-emerald);">WORKER</span>
+            </div>
+          `;
+        });
+      }
+
+      // 3. Matched Incidents from SQLite Database
+      const matchedInc = incidents.filter((i) => !q || String(i.id).includes(q) || i.type.toLowerCase().includes(q) || (i.description && i.description.toLowerCase().includes(q)));
+      if (matchedInc.length > 0) {
+        html += `<div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--accent-amber); text-transform: uppercase; margin-top: 0.5rem; font-weight: 700;">Incident Audit Records (${matchedInc.length})</div>`;
+        matchedInc.slice(0, 4).forEach((i) => {
+          html += `
+            <div class="palette-item" data-type="incident" data-id="${i.id}" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; cursor: pointer;">
+              <div>
+                <strong style="color: #fff; font-size: 0.85rem;">#INC-0${i.id}: ${i.type}</strong>
+                <p class="muted" style="font-size: 0.75rem;">${i.description || "OSHA Violation Audit"} • Status: ${i.status}</p>
+              </div>
+              <span class="badge" style="font-size: 0.65rem; background: rgba(255,183,3,0.15); color: var(--accent-amber);">${i.status.toUpperCase()}</span>
+            </div>
+          `;
+        });
+      }
+
+      if (!html) {
+        html = `<div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem;">No results found for "${query}". Try searching "PPE", "Worker", or "Twin".</div>`;
+      }
+
+      resultsEl.innerHTML = html;
+
+      // Click handlers on items
+      resultsEl.querySelectorAll(".palette-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          const type = item.dataset.type;
+          this.close();
+          if (type === "cmd") {
+            const idx = parseInt(item.dataset.idx, 10);
+            commands[idx]?.action();
+          } else if (type === "person") {
+            eventBus.emit("nav:tab", "overview");
+            eventBus.emit("toast", { message: `Selected worker #${item.dataset.id}` });
+          } else if (type === "incident") {
+            eventBus.emit("nav:tab", "incidents");
+            eventBus.emit("toast", { message: `Focused Incident #${item.dataset.id}` });
+          }
+        });
+      });
+    };
+
+    renderResults(initialQuery);
+
+    inputEl?.addEventListener("input", (e) => {
+      renderResults(e.target.value);
+    });
+
+    inputEl?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const first = resultsEl.querySelector(".palette-item");
+        if (first) first.click();
+      }
+    });
+
+    this.modal.classList.remove("hidden");
+    setTimeout(() => inputEl?.focus(), 50);
+  }
+
+
   close() {
     if (this.modal) {
       this.modal.classList.add("hidden");
