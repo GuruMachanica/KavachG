@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "public": true,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/Frontend/index.html" },
+    { "source": "/console", "destination": "/Frontend/console.html" },
+    { "source": "/modules", "destination": "/Frontend/modules.html" },
+    { "source": "/demo", "destination": "/Frontend/demo.html" },
+    { "source": "/architecture", "destination": "/Frontend/architecture.html" },
+    { "source": "/compliance", "destination": "/Frontend/compliance.html" },
+    { "source": "/benchmarks", "destination": "/Frontend/benchmarks.html" },
+    { "source": "/(.*)", "destination": "/Frontend/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}

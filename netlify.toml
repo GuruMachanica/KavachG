@@ -1,0 +1,40 @@
+[build]
+  publish = "Frontend"
+  command = ""
+
+[[redirects]]
+  from = "/console"
+  to = "/console.html"
+  status = 200
+
+[[redirects]]
+  from = "/modules"
+  to = "/modules.html"
+  status = 200
+
+[[redirects]]
+  from = "/demo"
+  to = "/demo.html"
+  status = 200
+
+[[redirects]]
+  from = "/architecture"
+  to = "/architecture.html"
+  status = 200
+
+[[redirects]]
+  from = "/compliance"
+  to = "/compliance.html"
+  status = 200
+
+[[redirects]]
+  from = "/benchmarks"
+  to = "/benchmarks.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

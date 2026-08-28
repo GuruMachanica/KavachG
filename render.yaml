@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: kavachg-backend
+    runtime: python
+    buildCommand: "pip install --upgrade pip && pip install -r Backend/requirements.txt"
+    startCommand: "python Backend/scripts/seed_database.py && cd Backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: JWT_SECRET
+        value: "kavachg_production_jwt_super_secret_key_2026"
+      - key: ADMIN_EMAIL
+        value: "admin@kavachg.com"
+      - key: ADMIN_PASSWORD
+        value: "admin123456"
+    disk:
+      name: kavachg-data
+      mountPath: /data
+      sizeGB: 1
