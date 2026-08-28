@@ -1,5 +1,5 @@
 # copilot_router.py - Safety Copilot & Stream Health Endpoints
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, Header
 from auth import get_current_user
 from safety_copilot import ask_safety_copilot, generate_daily_safety_briefing, analyze_incident_with_ai
 from stream_watchdog import get_watchdog_health
@@ -23,9 +23,10 @@ def query_copilot(payload: dict = Body(...), user: dict = Depends(get_current_us
 
 
 @router.get("/copilot/health")
-def get_system_health(user: dict = Depends(get_current_user)):
+def get_system_health():
     watchdog = get_watchdog_health()
     return {
+        "status": "healthy",
         "watchdog": watchdog,
         "engine": "active",
         "self_healing": "enabled"
@@ -33,46 +34,30 @@ def get_system_health(user: dict = Depends(get_current_user)):
 
 
 @router.get("/zones")
-def list_zones(db: sqlite3.Connection = Depends(get_db), user: dict = Depends(get_current_user)):
+def list_zones(db: sqlite3.Connection = Depends(get_db)):
     c = db.cursor()
+    c.execute("CREATE TABLE IF NOT EXISTS restricted_zones (id INTEGER PRIMARY KEY AUTOINCREMENT, camera_id INTEGER, name TEXT, polygon_json TEXT, is_active INTEGER)")
     c.execute("SELECT id, camera_id, name, polygon_json, is_active FROM restricted_zones")
     rows = c.fetchall()
     zones = []
     for r in rows:
-        try:
-            pts = json.loads(r[3])
-        except Exception:
-            pts = []
         zones.append({
-            "id": r[0],
-            "camera_id": r[1],
-            "name": r[2],
-            "points": pts,
-            "is_active": bool(r[4])
+            "id": r["id"],
+            "camera_id": r["camera_id"],
+            "name": r["name"],
+            "polygon": json.loads(r["polygon_json"]) if r["polygon_json"] else [],
+            "is_active": bool(r["is_active"])
         })
-    set_active_zones(zones)
     return zones
 
 
 @router.post("/zones")
-def create_or_update_zone(payload: dict = Body(...), db: sqlite3.Connection = Depends(get_db), user: dict = Depends(get_current_user)):
-    name = payload.get("name", "Restricted Area")
-    camera_id = payload.get("camera_id", 0)
-    points = payload.get("points", [])
-    pts_json = json.dumps(points)
-    
+def save_zone(payload: dict = Body(...), db: sqlite3.Connection = Depends(get_db), user: dict = Depends(get_current_user)):
     c = db.cursor()
+    c.execute("CREATE TABLE IF NOT EXISTS restricted_zones (id INTEGER PRIMARY KEY AUTOINCREMENT, camera_id INTEGER, name TEXT, polygon_json TEXT, is_active INTEGER)")
     c.execute(
-        "INSERT INTO restricted_zones (camera_id, name, polygon_json, is_active) VALUES (?, ?, ?, 1)",
-        (camera_id, name, pts_json)
+        "INSERT INTO restricted_zones (camera_id, name, polygon_json, is_active) VALUES (?, ?, ?, ?)",
+        (payload.get("camera_id", 0), payload.get("name", "Zone"), json.dumps(payload.get("polygon", [])), 1)
     )
     db.commit()
-    zone_id = c.lastrowid
-    
-    # Refresh active zones in memory
-    c.execute("SELECT id, camera_id, name, polygon_json, is_active FROM restricted_zones WHERE is_active=1")
-    active_rows = c.fetchall()
-    active_zones = [{"id": r[0], "camera_id": r[1], "name": r[2], "points": json.loads(r[3])} for r in active_rows]
-    set_active_zones(active_zones)
-    
-    return {"message": "Zone saved successfully", "id": zone_id, "name": name}
+    return {"message": "Zone configured successfully"}
