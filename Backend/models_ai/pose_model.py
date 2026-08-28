@@ -3,15 +3,28 @@ import torch
 import cv2
 from ultralytics import YOLO
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-MODEL_PATHS = [
-    os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.pt"),
-    os.path.join(BASE_DIR, "Models", "Pose", "best.pt"),
-    os.path.join(BASE_DIR, "Models", "Pose", "yolov8s-pose.pt"),
-]
 
-ONNX_PATH = os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.onnx")
-ENGINE_PATH = os.path.join(BASE_DIR, "Models", "Fall_Detection", "yolov8s-pose.engine")
+def _find_pose_model_path():
+    search_dirs = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Models")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "Models")),
+        os.path.abspath(os.path.join(os.getcwd(), "Models")),
+        os.path.abspath(os.path.join(os.getcwd(), "..", "Models")),
+        "/app/Models",
+    ]
+    candidates = [
+        ("Fall_Detection", "yolov8s-pose.pt"),
+        ("Pose", "best.pt"),
+        ("Pose", "yolov8s-pose.pt"),
+    ]
+    for d in search_dirs:
+        for sub, name in candidates:
+            p = os.path.join(d, sub, name)
+            if os.path.exists(p):
+                return p
+    # Fallback default
+    return os.path.join(search_dirs[0], "Fall_Detection", "yolov8s-pose.pt")
+
 
 _pose_model = None
 _pose_model_path = None
@@ -24,92 +37,59 @@ def get_pose_model():
         return _pose_model
 
     _pose_model_error = None
-
-    if os.path.exists(ENGINE_PATH) and torch.cuda.is_available():
+    target_path = _find_pose_model_path()
+    if os.path.exists(target_path):
         try:
-            _pose_model = YOLO(ENGINE_PATH, task="pose")
-            _pose_model_path = ENGINE_PATH
+            _pose_model = YOLO(target_path, task="pose")
+            _pose_model_path = target_path
             return _pose_model
-        except Exception:
-            pass
-
-    if os.path.exists(ONNX_PATH):
-        try:
-            _pose_model = YOLO(ONNX_PATH, task="pose")
-            _pose_model_path = ONNX_PATH
-            return _pose_model
-        except Exception:
-            pass
-
-    for model_path in MODEL_PATHS:
-        if not os.path.exists(model_path):
-            continue
-        try:
-            _pose_model = YOLO(model_path, task="pose")
-            _pose_model_path = model_path
-            return _pose_model
-        except Exception as exc:
-            _pose_model_error = str(exc)
-
-    return _pose_model
+        except Exception as e:
+            _pose_model_error = str(e)
+            return None
+    return None
 
 
 def unload_pose_model() -> None:
-    global _pose_model, _pose_model_path
+    global _pose_model, _pose_model_path, _pose_model_error
     _pose_model = None
     _pose_model_path = None
+    _pose_model_error = None
 
 
-def get_pose_model_error() -> str | None:
-    return _pose_model_error
-
-
-def get_pose_model_path() -> str | None:
-    return _pose_model_path
-
-
-def detect_pose(img):
+def detect_pose(img, conf_threshold=0.25, device=None):
     model = get_pose_model()
     if not model:
         return []
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    half = True if device == "cuda" else False
-    
-    results = model(
-        img,
-        imgsz=640,
-        conf=0.25,
-        device=device,
-        half=half,
-        verbose=False,
-    )
+    try:
+        results = model(img, conf=conf_threshold, device=device, verbose=False)
+    except Exception as e:
+        print(f"[POSE_MODEL] Inference error: {e}")
+        return []
 
     detections = []
-    for result in results:
-        boxes = getattr(result, "boxes", None)
-        kpts = getattr(result, "keypoints", None)
-        if boxes is None:
-            continue
+    for r in results:
+        boxes = getattr(r, "boxes", None)
+        keypoints = getattr(r, "keypoints", None)
 
-        for idx, box in enumerate(boxes):
-            keypoints = []
-            if kpts is not None and hasattr(kpts, "xy") and idx < len(kpts.xy):
-                keypoints = kpts.xy[idx].tolist()
+        if boxes is not None and keypoints is not None:
+            xyxy_list = boxes.xyxy.tolist() if len(boxes) > 0 else []
+            conf_list = boxes.conf.tolist() if len(boxes) > 0 else []
+            kp_data = keypoints.data.tolist() if len(keypoints) > 0 else []
 
-            detections.append(
-                {
-                    "box": [
-                        int(box.xyxy[0][0]),
-                        int(box.xyxy[0][1]),
-                        int(box.xyxy[0][2]),
-                        int(box.xyxy[0][3]),
-                    ],
-                    "confidence": float(box.conf[0]),
-                    "label": f"Worker #{idx + 1}: Pose Tracked",
-                    "compliant": True,
-                    "keypoints": keypoints,
-                }
-            )
+            for i in range(len(xyxy_list)):
+                box = [int(x) for x in xyxy_list[i]]
+                conf = float(conf_list[i]) if i < len(conf_list) else 0.0
+                kps = kp_data[i] if i < len(kp_data) else []
 
+                detections.append(
+                    {
+                        "class": "Person",
+                        "confidence": conf,
+                        "bbox": box,
+                        "keypoints": kps,
+                    }
+                )
     return detections

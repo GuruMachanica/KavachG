@@ -5,11 +5,28 @@ import numpy as np
 import torch
 from ultralytics import YOLO
 
-# Load the pose model for fall detection
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "../Models/Fall_Detection/yolov8s-pose.pt",
-)
+def _find_fall_model_path():
+    search_dirs = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Models")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "Models")),
+        os.path.abspath(os.path.join(os.getcwd(), "Models")),
+        os.path.abspath(os.path.join(os.getcwd(), "..", "Models")),
+        "/app/Models",
+    ]
+    candidates = [
+        ("Fall_Detection", "yolov8s-pose.pt"),
+        ("Pose", "best.pt"),
+        ("Pose", "yolov8s-pose.pt"),
+    ]
+    for d in search_dirs:
+        for sub, name in candidates:
+            p = os.path.join(d, sub, name)
+            if os.path.exists(p):
+                return p
+    return os.path.join(search_dirs[0], "Fall_Detection", "yolov8s-pose.pt")
+
+
+MODEL_PATH = _find_fall_model_path()
 _fall_model = None
 
 # Track person states across frames for temporal fall analysis
@@ -19,9 +36,16 @@ _person_history = {}
 
 def get_fall_model():
     global _fall_model
-    if _fall_model is None and os.path.exists(MODEL_PATH):
-        _fall_model = YOLO(MODEL_PATH, task="pose")
+    if _fall_model is None:
+        target = _find_fall_model_path()
+        if os.path.exists(target):
+            try:
+                _fall_model = YOLO(target, task="pose")
+            except Exception as e:
+                print(f"[FALL_MODEL] Error loading model: {e}")
+                return None
     return _fall_model
+
 
 
 def unload_fall_model() -> None:

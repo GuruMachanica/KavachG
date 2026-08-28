@@ -15,17 +15,37 @@ CLASS_NAMES = [
     "machinery",
     "vehicle",
 ]
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__), "../Models/PPE-Detection/ppe.pt"
-)
+def _find_ppe_model_path():
+    search_dirs = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Models")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "Models")),
+        os.path.abspath(os.path.join(os.getcwd(), "Models")),
+        os.path.abspath(os.path.join(os.getcwd(), "..", "Models")),
+        "/app/Models",
+    ]
+    for d in search_dirs:
+        p = os.path.join(d, "PPE-Detection", "ppe.pt")
+        if os.path.exists(p):
+            return p
+    return os.path.join(search_dirs[0], "PPE-Detection", "ppe.pt")
+
+
+MODEL_PATH = _find_ppe_model_path()
 _ppe_model = None
 
 
 def get_ppe_model():
     global _ppe_model
-    if _ppe_model is None and os.path.exists(MODEL_PATH):
-        _ppe_model = YOLO(MODEL_PATH)
+    if _ppe_model is None:
+        target = _find_ppe_model_path()
+        if os.path.exists(target):
+            try:
+                _ppe_model = YOLO(target)
+            except Exception as e:
+                print(f"[PPE_MODEL] Error loading model: {e}")
+                return None
     return _ppe_model
+
 
 
 def unload_ppe_model() -> None:
