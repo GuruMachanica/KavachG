@@ -1,7 +1,11 @@
 import os
 import torch
 import cv2
-from ultralytics import YOLO
+try:
+    from ultralytics import YOLO
+except ImportError:
+    YOLO = None
+
 
 
 def _find_pose_model_path():

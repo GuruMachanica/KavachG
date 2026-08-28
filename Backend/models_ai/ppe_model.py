@@ -1,7 +1,10 @@
 import os
 import cv2
 import torch
-from ultralytics import YOLO
+try:
+    from ultralytics import YOLO
+except ImportError:
+    YOLO = None
 
 CLASS_NAMES = [
     "Hardhat",
@@ -36,6 +39,8 @@ _ppe_model = None
 
 def get_ppe_model():
     global _ppe_model
+    if YOLO is None:
+        return None
     if _ppe_model is None:
         target = _find_ppe_model_path()
         if os.path.exists(target):
@@ -45,6 +50,7 @@ def get_ppe_model():
                 print(f"[PPE_MODEL] Error loading model: {e}")
                 return None
     return _ppe_model
+
 
 
 

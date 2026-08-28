@@ -3,7 +3,11 @@ import time
 import cv2
 import numpy as np
 import torch
-from ultralytics import YOLO
+try:
+    from ultralytics import YOLO
+except ImportError:
+    YOLO = None
+
 
 def _find_fall_model_path():
     search_dirs = [

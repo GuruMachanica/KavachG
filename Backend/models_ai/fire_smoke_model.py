@@ -1,6 +1,10 @@
 import os
-from ultralytics import YOLO
 import torch
+try:
+    from ultralytics import YOLO
+except ImportError:
+    YOLO = None
+
 
 
 def _find_model_path():
