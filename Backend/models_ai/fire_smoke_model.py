@@ -1,9 +1,10 @@
 import os
 import torch
 try:
-    from ultralytics import YOLO
+    from ultralytics import YOLO  # type: ignore
 except ImportError:
     YOLO = None
+
 
 
 

@@ -2,9 +2,10 @@ import os
 import cv2
 import torch
 try:
-    from ultralytics import YOLO
+    from ultralytics import YOLO  # type: ignore
 except ImportError:
     YOLO = None
+
 
 CLASS_NAMES = [
     "Hardhat",

@@ -4,9 +4,10 @@ import cv2
 import numpy as np
 import torch
 try:
-    from ultralytics import YOLO
+    from ultralytics import YOLO  # type: ignore
 except ImportError:
     YOLO = None
+
 
 
 def _find_fall_model_path():
