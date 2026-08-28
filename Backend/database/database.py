@@ -119,9 +119,16 @@ def init_db():
         ensure_column(c, "incidents", "camera_id", "INTEGER DEFAULT 0")
         ensure_column(c, "incidents", "confidence", "REAL DEFAULT 0.0")
 
-        # Seed initial setting if not present
-        c.execute("SELECT count(*) as cnt FROM settings")
-        row = c.fetchone()
-        if not row or row["cnt"] == 0:
-            c.execute("INSERT INTO settings (confidence_threshold) VALUES (0.5)")
+        # Seed default admin user if table empty
+        c.execute("SELECT count(*) as cnt FROM users")
+        u_row = c.fetchone()
+        if not u_row or u_row["cnt"] == 0:
+            from passlib.context import CryptContext
+            pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+            default_admin_hash = pwd_ctx.hash("KavachG#Secured2026!IronLogic")
+            c.execute(
+                "INSERT INTO users (id, name, email, password, role, verified) VALUES (?, ?, ?, ?, ?, ?)",
+                (1, "Lead Security Architect", "ironlogic.admin@kavachg.io", default_admin_hash, "admin", 1)
+            )
+
 
