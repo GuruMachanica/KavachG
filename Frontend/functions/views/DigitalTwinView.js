@@ -1,9 +1,9 @@
-// DigitalTwinView.js - Sector Alpha 3D Radar & Environmental Telemetry (No Emojis)
 import { BaseView } from "./BaseView.js";
 import { stateManager } from "../core/StateManager.js";
-import { PlantDigitalTwin } from "../ui/PlantDigitalTwin.js";
+import { PlantDigitalTwin } from "../ui/PlantDigitalTwin.js?v=2.6.0";
 import { eventBus } from "../core/EventBus.js";
 import { Icons } from "../ui/Icons.js";
+
 
 export class DigitalTwinView extends BaseView {
   constructor() {

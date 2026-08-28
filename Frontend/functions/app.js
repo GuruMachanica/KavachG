@@ -11,14 +11,16 @@ import { animationEngine } from "./ui/AnimationEngine.js";
 import { modalManager } from "./ui/ModalManager.js";
 
 // View Dynamic Loaders for Code Splitting & AJAX Lazy Loading
+const BUILD_V = Date.now();
 const VIEW_FACTORIES = {
-  overview: () => import("./views/OverviewView.js").then((m) => new m.OverviewView()),
-  detection: () => import("./views/DetectionView.js").then((m) => new m.DetectionView()),
-  digitaltwin: () => import("./views/DigitalTwinView.js").then((m) => new m.DigitalTwinView()),
-  incidents: () => import("./views/IncidentsView.js").then((m) => new m.IncidentsView()),
-  copilot: () => import("./views/CopilotView.js").then((m) => new m.CopilotView()),
-  settings: () => import("./views/SettingsView.js").then((m) => new m.SettingsView()),
+  overview: () => import(`./views/OverviewView.js?v=${BUILD_V}`).then((m) => new m.OverviewView()),
+  detection: () => import(`./views/DetectionView.js?v=${BUILD_V}`).then((m) => new m.DetectionView()),
+  digitaltwin: () => import(`./views/DigitalTwinView.js?v=${BUILD_V}`).then((m) => new m.DigitalTwinView()),
+  incidents: () => import(`./views/IncidentsView.js?v=${BUILD_V}`).then((m) => new m.IncidentsView()),
+  copilot: () => import(`./views/CopilotView.js?v=${BUILD_V}`).then((m) => new m.CopilotView()),
+  settings: () => import(`./views/SettingsView.js?v=${BUILD_V}`).then((m) => new m.SettingsView()),
 };
+
 
 export class KavachGApplication {
   constructor() {
