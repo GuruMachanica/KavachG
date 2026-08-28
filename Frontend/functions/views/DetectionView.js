@@ -7,7 +7,9 @@ import { StreamManager } from "../ui/StreamManager.js";
 import { CanvasHUD } from "../ui/CanvasHUD.js";
 import { HeatmapEngine } from "../ui/HeatmapEngine.js";
 import { Icons } from "../ui/Icons.js";
+import { modalManager } from "../ui/ModalManager.js";
 import { clientInferenceEngine } from "../core/ClientInferenceEngine.js";
+
 
 
 export class DetectionView extends BaseView {
@@ -134,11 +136,14 @@ export class DetectionView extends BaseView {
               <span style="color: var(--accent-cyan);">${Icons.camera}</span>
               <h3 style="font-size: 1rem;">Camera Control</h3>
             </div>
-            <p class="muted" style="font-size: 0.8rem; margin-bottom: 0.5rem;">Select active edge stream feed</p>
-            <select id="camera-select-dropdown" style="width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-subtle); padding: 0.5rem; border-radius: 8px;">
+            <select id="camera-select-dropdown" style="width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-subtle); padding: 0.5rem; border-radius: 8px; margin-bottom: 0.4rem;">
               ${cameraOptions}
             </select>
+            <button id="open-edge-node-btn" class="btn-secondary" style="width: 100%; font-size: 0.75rem; padding: 0.4rem; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: var(--accent-cyan); color: var(--accent-cyan);">
+              <span>⚡ Connect Local GPU Node (Option 3)</span>
+            </button>
           </div>
+
 
           <!-- Autonomous Swarm & Patrol Controller -->
           <div style="background: rgba(0, 240, 255, 0.04); border: 1px solid var(--border-glow); border-radius: 8px; padding: 0.75rem;">
@@ -250,8 +255,14 @@ export class DetectionView extends BaseView {
     });
 
 
+    // Connect Local GPU Node Modal (Option 3)
+    this.container.querySelector("#open-edge-node-btn")?.addEventListener("click", () => {
+      modalManager.showEdgeNodeModal();
+    });
+
     // Camera Dropdown Switcher
     this.container.querySelector("#camera-select-dropdown")?.addEventListener("change", async (e) => {
+
       const val = e.target.value;
       if (val === "webcam") {
         stateManager.set("selectedCameraId", "webcam");

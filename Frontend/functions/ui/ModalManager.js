@@ -292,11 +292,12 @@ export class ModalManager {
       { type: "NAV", title: "Open 3D Plant Digital Twin", desc: "Sector Alpha spatial Metaverse & vision cones", action: () => eventBus.emit("nav:tab", "digitaltwin") },
       { type: "NAV", title: "Open AI Safety Copilot", desc: "OSHA regulatory reasoning & incident query", action: () => eventBus.emit("nav:tab", "copilot") },
       { type: "NAV", title: "Open Incident Audits & Records", desc: "OSHA Form 301 incident ledger and logs", action: () => eventBus.emit("nav:tab", "incidents") },
-      { type: "NAV", title: "Open Overview Dashboard", desc: "KPI metrics, active workers, compliance rating", action: () => eventBus.emit("nav:tab", "overview") },
+      { type: "ACTION", title: "Connect Local Edge GPU Node (Option 3)", desc: "Run YOLO models on your local GPU & sync to cloud", action: () => this.showEdgeNodeModal() },
       { type: "ACTION", title: "Toggle Autonomous Swarm Patrol", desc: "Auto-cycle camera sectors and triage hazards", action: async () => { await apiClient.toggleSwarmPatrol(); eventBus.emit("toast", { message: "Swarm Patrol toggled" }); } },
       { type: "ACTION", title: "Export OSHA 301 Summary Report (PDF)", desc: "Generate compliance PDF audit package", action: () => { eventBus.emit("nav:tab", "incidents"); pdfReportGenerator.generatePDF(incidents); } },
       { type: "ACTION", title: "Sound Audio Alert Alarm", desc: "Trigger 90dB alert siren test", action: () => eventBus.emit("incident:alert", { type: "MANUAL TEST ALARM", location: "Console" }) },
     ];
+
 
     const renderResults = (query = "") => {
       const q = query.toLowerCase().trim();
@@ -395,8 +396,84 @@ export class ModalManager {
     setTimeout(() => inputEl?.focus(), 50);
   }
 
+  showEdgeNodeModal() {
+    if (!this.modal) return;
+
+    const cloudUrl = apiClient.baseUrl;
+    const cliCommand = `python scripts/run_local_edge_agent.py --cloud-url ${cloudUrl} --camera 0 --mode ppe`;
+
+    this.title.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="color: var(--accent-cyan);">${Icons.cpu || "⚡"}</span>
+        <span>Connect Local Edge GPU Node (Option 3)</span>
+      </div>
+    `;
+
+    this.body.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <div style="background: rgba(0, 240, 255, 0.06); border: 1px solid var(--border-glow); border-radius: 12px; padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h4 style="color: #fff; font-size: 1.05rem;">Zero-Cost Local GPU Processing</h4>
+            <span class="badge" style="background: rgba(0, 229, 163, 0.2); color: var(--accent-emerald); font-size: 0.7rem;">60+ FPS HARDWARE ACCEL</span>
+          </div>
+          <p class="muted" style="font-size: 0.85rem; line-height: 1.5;">
+            Run YOLOv8 models directly on your accessing computer's graphics card (<strong>NVIDIA CUDA</strong>, <strong>Apple Silicon MPS</strong>, or <strong>DirectML</strong>) while viewing live telemetry in this hosted cloud dashboard. Zero server load & 100% private.
+          </p>
+        </div>
+
+        <div>
+          <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--accent-cyan); text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.4rem;">
+            Terminal Launch Command (1-Click Run):
+          </label>
+          <div style="position: relative; background: #030712; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.85rem 1rem; font-family: var(--font-mono); font-size: 0.85rem; color: #38bdf8; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;">
+            <code id="edge-cli-code" style="overflow-x: auto; white-space: nowrap; flex: 1;">${cliCommand}</code>
+            <button id="copy-edge-cli-btn" class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+
+        <div class="panel" style="padding: 1rem; background: rgba(255,255,255,0.02); font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.6rem;">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">⚡ 3-Step Local Quickstart:</div>
+          <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+            <span class="badge" style="background: rgba(0,240,255,0.2); color: var(--accent-cyan); font-size: 0.65rem;">1</span>
+            <span>Install requirements: <code style="font-family: var(--font-mono); color: var(--accent-cyan);">pip install ultralytics torch opencv-python requests</code></span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+            <span class="badge" style="background: rgba(0,240,255,0.2); color: var(--accent-cyan); font-size: 0.65rem;">2</span>
+            <span>Paste and run the command in your local PowerShell / Terminal.</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+            <span class="badge" style="background: rgba(0,229,163,0.2); color: var(--accent-emerald); font-size: 0.65rem;">3</span>
+            <span>Your local camera window will open, and safety violation incidents will stream directly to this cloud dashboard!</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+          <a href="https://raw.githubusercontent.com/GuruMachanica/KavachG/main/scripts/run_local_edge_agent.py" target="_blank" download="run_local_edge_agent.py" style="color: var(--accent-cyan); font-size: 0.8rem; text-decoration: none;">
+            📥 Download standalone edge_agent.py
+          </a>
+          <button id="edge-modal-close-btn" class="btn-primary" style="padding: 0.45rem 1.2rem; font-size: 0.85rem;">
+            Done / Close
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("copy-edge-cli-btn")?.addEventListener("click", () => {
+      navigator.clipboard.writeText(cliCommand);
+      eventBus.emit("toast", { message: "Edge CLI command copied to clipboard!" });
+    });
+
+    document.getElementById("edge-modal-close-btn")?.addEventListener("click", () => {
+      this.close();
+    });
+
+    this.modal.classList.remove("hidden");
+  }
 
   close() {
+
     if (this.modal) {
       this.modal.classList.add("hidden");
       if (this.body) this.body.innerHTML = "";
