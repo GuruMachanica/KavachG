@@ -54,16 +54,34 @@ class SharedCamera:
             self.cap = None
             self._is_hardware = False
 
-        # Find sample factory assets for fallback when no hardware cam is available
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-        sample_1 = os.path.join(base_dir, "Frontend", "assets", "cctv_factory_1.jpg")
-        sample_2 = os.path.join(base_dir, "Frontend", "assets", "cctv_factory_2.jpg")
+        # Find sample factory assets for fallback when no hardware cam is available (Cloud / Docker)
+        import numpy as np
+        search_paths = [
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "Frontend", "assets")),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Frontend", "assets")),
+            os.path.abspath(os.path.join(os.getcwd(), "Frontend", "assets")),
+            os.path.abspath(os.path.join(os.getcwd(), "..", "Frontend", "assets")),
+            "/app/Frontend/assets"
+        ]
+
+        sample_1, sample_2 = None, None
+        for sp in search_paths:
+            s1 = os.path.join(sp, "cctv_factory_1.jpg")
+            s2 = os.path.join(sp, "cctv_factory_2.jpg")
+            if os.path.exists(s1):
+                sample_1, sample_2 = s1, s2
+                break
 
         fallback_img = None
-        if os.path.exists(sample_1):
+        if sample_1 and os.path.exists(sample_1):
             fallback_img = cv2.imread(sample_1)
-        elif os.path.exists(sample_2):
-            fallback_img = cv2.imread(sample_2)
+
+        if fallback_img is None:
+            # Generate clean synthetic industrial frame
+            fallback_img = np.zeros((480, 640, 3), dtype=np.uint8)
+            cv2.rectangle(fallback_img, (0, 0), (640, 480), (8, 14, 22), -1)
+            cv2.putText(fallback_img, "KAVACHG CLOUD OPTICAL CCTV", (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 240, 255), 2)
+            cv2.putText(fallback_img, "SECTOR ALPHA - DIRECT VISION", (30, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 229, 163), 1)
 
         while self._running:
             if self._is_hardware and self.cap is not None and self.cap.isOpened():
@@ -74,13 +92,17 @@ class SharedCamera:
                 else:
                     time.sleep(0.02)
             else:
-                # Simulated optical CCTV feed loop
-                if fallback_img is not None:
-                    cur_path = sample_2 if (self.index % 2 == 1 and os.path.exists(sample_2)) else sample_1
-                    cur_img = cv2.imread(cur_path) if os.path.exists(cur_path) else fallback_img
+                # Simulated optical CCTV feed loop with live timestamp
+                cur_path = sample_2 if (self.index % 2 == 1 and sample_2 and os.path.exists(sample_2)) else sample_1
+                cur_img = cv2.imread(cur_path) if (cur_path and os.path.exists(cur_path)) else fallback_img.copy()
+                if cur_img is not None:
+                    frame_copy = cur_img.copy()
+                    ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                    cv2.putText(frame_copy, f"CAM {self.index:02d} | {ts} | FPS: 30.0", (16, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 240, 255), 1, cv2.LINE_AA)
                     with self._lock:
-                        self._frame = cur_img.copy() if cur_img is not None else None
-                time.sleep(0.04)
+                        self._frame = frame_copy
+                time.sleep(0.033)
+
 
         if self.cap is not None:
             self.cap.release()

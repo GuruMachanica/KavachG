@@ -173,6 +173,39 @@ export class ApiClient {
     return res;
   }
 
+  async getCameras() {
+    return this._request("/cameras", {}, 5000);
+  }
+
+  async setCamera(cameraId) {
+    const res = await this._request(`/cameras/${cameraId}`, {
+      method: "POST",
+    });
+    this.invalidateCache("/cameras");
+    return res;
+  }
+
+  async createUser(payload) {
+    const res = await this._request("/auth/admin/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return res;
+  }
+
+  getClipUrl(clipPath, token = null) {
+    const tok = token || stateManager.get("token");
+    const filename = clipPath.split(/[\\/]/).pop();
+    return `${this.baseUrl}/clips/${filename}${tok ? `?token=${encodeURIComponent(tok)}` : ""}`;
+  }
+
+  getImageUrl(imagePath, token = null) {
+    const tok = token || stateManager.get("token");
+    const filename = imagePath.split(/[\\/]/).pop();
+    return `${this.baseUrl}/incident_images/${filename}${tok ? `?token=${encodeURIComponent(tok)}` : ""}`;
+  }
+
   getStreamUrl(mode = "video_feed", token = null) {
     const activeToken = token || stateManager.get("token");
     const tokParam = activeToken ? `token=${encodeURIComponent(activeToken)}` : "";
@@ -181,6 +214,5 @@ export class ApiClient {
   }
 }
 
-
-
 export const apiClient = new ApiClient();
+

@@ -2,6 +2,7 @@
 import { stateManager } from "./StateManager.js";
 import { eventBus } from "./EventBus.js";
 import { audioAlertEngine } from "./AudioAlertEngine.js";
+import { apiClient } from "./ApiClient.js";
 
 export class WebSocketService {
   constructor() {
@@ -18,11 +19,12 @@ export class WebSocketService {
       this.ws.close();
     }
 
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const url = `${protocol}://${window.location.hostname}:8000/ws/incidents`;
+    const baseApi = apiClient.baseUrl; // e.g. "https://kavachg.onrender.com" or "http://127.0.0.1:8000"
+    const wsUrl = baseApi.replace(/^http/, "ws") + "/ws/incidents";
     
     try {
-      this.ws = new WebSocket(url);
+      this.ws = new WebSocket(wsUrl);
+
       
       this.ws.onopen = () => {
         this.retryDelay = 2000;
