@@ -12,7 +12,7 @@ def gen():
             ret, frame = cap.read()
             if not ret:
                 break
-            _, buffer = cv2.imencode(".jpg", frame)
+            _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80, cv2.IMWRITE_JPEG_OPTIMIZE, 1])
             frame_bytes = buffer.tobytes()
             yield (
                 b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"

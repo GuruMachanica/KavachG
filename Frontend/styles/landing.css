@@ -213,8 +213,11 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   margin-bottom: 5rem;
   box-shadow: 0 16px 36px -8px rgba(0,0,0,0.5);
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 120px;
 }
 
 .stat-item {
@@ -238,7 +241,10 @@ body {
 /* Features Grid */
 .features {
   padding: 3rem 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
 }
+
 
 .section-header {
   text-align: center;

@@ -56,7 +56,7 @@ def gen_live_detection(model_type):
                 if frame is None:
                     continue
 
-                encoded, buffer = cv2.imencode(".jpg", frame)
+                encoded, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80, cv2.IMWRITE_JPEG_OPTIMIZE, 1])
                 if not encoded:
                     continue
                 yield (
