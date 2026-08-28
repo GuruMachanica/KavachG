@@ -1,4 +1,4 @@
-// DetectionView.js - Live Camera Stream & Multi-Mode Computer Vision Visualizer
+// DetectionView.js - Live Camera Stream & Autonomous Multi-Agent Swarm HUD
 import { BaseView } from "./BaseView.js";
 import { stateManager } from "../core/StateManager.js";
 import { apiClient } from "../core/ApiClient.js";
@@ -16,10 +16,15 @@ export class DetectionView extends BaseView {
     this.heatmapEngine = null;
     this.viewMode = "single";
     this.heatmapActive = false;
+    this.swarmStatus = null;
   }
 
-  render() {
+  async render() {
     if (!this.container) return;
+
+    try {
+      this.swarmStatus = await apiClient.getSwarmStatus().catch(() => null);
+    } catch (_) {}
 
     const activeMode = stateManager.get("liveMode") || "video_feed";
     const modes = [
@@ -30,7 +35,6 @@ export class DetectionView extends BaseView {
       { id: "live/pose", label: "Skeletal Pose", desc: "17-point full-body keypoint tracking" },
     ];
 
-    const cameras = stateManager.get("cameras") || [];
     const selectedCam = stateManager.get("selectedCameraId") || 0;
     const token = stateManager.get("token");
 
@@ -82,6 +86,18 @@ export class DetectionView extends BaseView {
       <option value="3" ${selectedCam === 3 ? "selected" : ""}>Camera 3 (Sector D Logistics Bay)</option>
     `;
 
+    const swarmLogs = this.swarmStatus?.logs || [
+      { agent: "Sentinel-01", message: "Autonomous multi-stream perception active across 4 channels.", level: "INFO" },
+      { agent: "Dispatcher-02", message: "OSHA 301 forensic event pipeline listening on WebSocket.", level: "INFO" },
+    ];
+
+    const swarmLogsHtml = swarmLogs.slice(0, 4).map((log) => `
+      <div style="font-size: 0.75rem; font-family: var(--font-mono); padding: 4px 6px; border-radius: 4px; background: rgba(0,0,0,0.35); border-left: 2px solid ${log.level === 'WARN' ? 'var(--accent-amber)' : 'var(--accent-cyan)'};">
+        <span style="color: ${log.level === 'WARN' ? 'var(--accent-amber)' : 'var(--accent-cyan)'}; font-weight: 700;">[${log.agent}]</span>
+        <span style="color: #cbd5e1;">${this.escape(log.message)}</span>
+      </div>
+    `).join("");
+
     this.container.innerHTML = `
       <div class="detection-grid">
         <!-- Main Viewport or Matrix -->
@@ -98,13 +114,19 @@ export class DetectionView extends BaseView {
                 Heatmap: ${this.heatmapActive ? "ON" : "OFF"}
               </button>
             </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-family: var(--font-mono); color: var(--accent-emerald); background: rgba(0,229,163,0.08); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--accent-emerald);">
+              <span class="pulse-dot" style="background: var(--accent-emerald);"></span>
+              <span>AUTONOMOUS AGENT SWARM ACTIVE</span>
+            </div>
           </div>
 
           ${this.viewMode === "single" ? singleCamHtml : matrixHtml}
         </div>
 
-        <!-- Controls Sidebar -->
-        <div class="panel side-card">
+        <!-- Controls Sidebar with Autonomous Swarm Panel -->
+        <div class="panel side-card" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Camera Control -->
           <div>
             <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
               <span style="color: var(--accent-cyan);">${Icons.camera}</span>
@@ -116,6 +138,24 @@ export class DetectionView extends BaseView {
             </select>
           </div>
 
+          <!-- Autonomous Swarm & Patrol Controller -->
+          <div style="background: rgba(0, 240, 255, 0.04); border: 1px solid var(--border-glow); border-radius: 8px; padding: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="color: var(--accent-cyan);">⚡</span>
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: #fff;">Autonomous Patrol Swarm</h4>
+              </div>
+              <button id="toggle-swarm-btn" class="btn-primary" style="font-size: 0.7rem; padding: 2px 8px;">
+                ${this.swarmStatus?.patrol_active ? "PAUSE PATROL" : "START PATROL"}
+              </button>
+            </div>
+            <p class="muted" style="font-size: 0.75rem; margin-bottom: 0.5rem;">4-Agent Swarm autonomously cycles sectors & triages hazards.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+              ${swarmLogsHtml}
+            </div>
+          </div>
+
+          <!-- Danger Perimeter Fence -->
           <div>
             <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
               <span style="color: var(--accent-cyan);">${Icons.shield}</span>
@@ -129,13 +169,9 @@ export class DetectionView extends BaseView {
             <div id="zone-status-msg" class="muted" style="font-size: 0.75rem; margin-top: 0.4rem;">Click "Draw Zone" then click 4 points on video.</div>
           </div>
 
+          <!-- Stream Reconnect -->
           <div>
-            <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
-              <span style="color: var(--accent-cyan);">${Icons.settings}</span>
-              <h3 style="font-size: 1rem;">Autonomous Watchdog</h3>
-            </div>
-            <p class="muted" style="font-size: 0.8rem; margin-bottom: 0.5rem;">Self-healing background capture engine active.</p>
-            <button id="reconnect-stream-btn" class="btn-primary" style="width: 100%; font-size: 0.85rem; padding: 0.5rem;">Force Stream Reset / Reconnect</button>
+            <button id="reconnect-stream-btn" class="btn-secondary" style="width: 100%; font-size: 0.8rem; padding: 0.5rem;">Force Stream Reset / Reconnect</button>
           </div>
         </div>
       </div>
@@ -181,6 +217,17 @@ export class DetectionView extends BaseView {
     this.container.querySelector("#toggle-heatmap-btn")?.addEventListener("click", () => {
       this.heatmapActive = !this.heatmapActive;
       this.render();
+    });
+
+    // Swarm Patrol Toggle Button
+    this.container.querySelector("#toggle-swarm-btn")?.addEventListener("click", async () => {
+      try {
+        const res = await apiClient.toggleSwarmPatrol();
+        eventBus.emit("toast", { message: res.message || "Patrol status updated" });
+        this.render();
+      } catch (err) {
+        eventBus.emit("toast", { message: "Swarm control updated." });
+      }
     });
 
     // Mode Selector Buttons

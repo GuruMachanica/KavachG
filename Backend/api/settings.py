@@ -1,5 +1,5 @@
 # settings.py - Detection sensitivity and app settings endpoints
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 import sqlite3
 from database import get_db
 
@@ -9,31 +9,42 @@ router = APIRouter()
 @router.get("/settings/sensitivity")
 def get_sensitivity(db: sqlite3.Connection = Depends(get_db)):
     c = db.cursor()
-    c.execute(
-        "SELECT value FROM settings WHERE key=?", ("detection_sensitivity",)
-    )
+    c.execute("SELECT confidence_threshold FROM settings LIMIT 1")
     row = c.fetchone()
-    return {"sensitivity": int(row[0]) if row else 50}
+    threshold = float(row[0]) if row and row[0] is not None else 0.5
+    return {
+        "confidence_threshold": threshold,
+        "sensitivity": int(threshold * 100)
+    }
 
 
 @router.post("/settings/sensitivity")
 def set_sensitivity(
-    data: dict = Body(...), db: sqlite3.Connection = Depends(get_db)
+    data: dict = Body(default={}),
+    confidence_threshold: float | None = Query(default=None),
+    db: sqlite3.Connection = Depends(get_db)
 ):
-    try:
-        value = int(data.get("value", 50))
-    except (TypeError, ValueError):
-        raise HTTPException(
-            status_code=400, detail="Sensitivity must be an integer"
-        )
-    if value < 0 or value > 100:
-        raise HTTPException(
-            status_code=400, detail="Sensitivity must be between 0 and 100"
-        )
+    val = confidence_threshold
+    if val is None and "confidence_threshold" in data:
+        try:
+            val = float(data["confidence_threshold"])
+        except ValueError:
+            val = 0.5
+    elif val is None and "value" in data:
+        try:
+            val = float(data["value"]) / 100.0
+        except ValueError:
+            val = 0.5
+    elif val is None:
+        val = 0.5
+
     c = db.cursor()
-    c.execute(
-        "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-        ("detection_sensitivity", str(value)),
-    )
+    c.execute("UPDATE settings SET confidence_threshold = ?, updated_at = CURRENT_TIMESTAMP", (val,))
+    if c.rowcount == 0:
+        c.execute("INSERT INTO settings (confidence_threshold) VALUES (?)", (val,))
     db.commit()
-    return {"message": "Sensitivity updated.", "sensitivity": value}
+    return {
+        "message": "Sensitivity updated.",
+        "confidence_threshold": val,
+        "sensitivity": int(val * 100)
+    }

@@ -1,5 +1,6 @@
 import cv2
 import time
+import numpy as np
 from camera_stream import ensure_camera_started, get_camera_index, get_frame
 from live_session import (
     activate_model,
@@ -13,6 +14,16 @@ from fire_smoke_model import detect_fire_smoke
 from fall_model import detect_fall
 from pose_model import detect_pose
 from incident_worker import enqueue_incident_job
+from realtime import broadcast_incident
+import asyncio
+
+# SKELETAL CONNECTIONS (COCO 17-keypoint graph)
+POSE_CONNECTIONS = [
+    (0, 1), (0, 2), (1, 3), (2, 4), # Head
+    (5, 6), (5, 7), (7, 9), (6, 8), (8, 10), # Arms
+    (5, 11), (6, 12), (11, 12), # Torso
+    (11, 13), (13, 15), (12, 14), (14, 16) # Legs
+]
 
 
 def gen_live_detection(model_type):
@@ -21,21 +32,21 @@ def gen_live_detection(model_type):
 
     session_id = activate_model(model_type)
 
-    fps = 20  # fallback FPS for clip buffering
+    fps = 20
     anomaly_start = None
     recording = False
     frames_buffer = []
     incident_recorded = False
     last_incident_time = 0
-    incident_cooldown = 15  # seconds to prevent duplicate incidents
-    record_duration = 10  # seconds
-    persistence_threshold = 5  # anomaly must persist for 5s
+    incident_cooldown = 10
+    record_duration = 8
+    persistence_threshold = 3
     max_buffer = int(fps * record_duration)
     inactive_stream = False
     last_confidence = None
+
     try:
         while True:
-            # Sleep previous model streams when a new model is activated.
             if not is_active(model_type, session_id):
                 if not inactive_stream:
                     sleep_model(model_type)
@@ -48,46 +59,54 @@ def gen_live_detection(model_type):
                 encoded, buffer = cv2.imencode(".jpg", frame)
                 if not encoded:
                     continue
-                frame_bytes = buffer.tobytes()
                 yield (
                     b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
-                    + frame_bytes
+                    + buffer.tobytes()
                     + b"\r\n"
                 )
                 continue
 
             inactive_stream = False
-
             frame = get_frame(timeout_seconds=1.0)
             if frame is None:
                 continue
 
+            # 1. RUN TARGET DETECTION MODEL
+            detections = []
+            anomaly = False
+
             if model_type == "ppe":
-                detections = detect_ppe(frame)
-                anomaly = any(
-                    det.get("status") == "Non-Compliant" or "NO-" in det.get("label", "")
-                    for det in detections
-                )
+                try:
+                    detections = detect_ppe(frame)
+                    anomaly = any(
+                        not det.get("compliant", True) or "NO-" in det.get("label", "").upper()
+                        for det in detections
+                    )
+                except Exception as e:
+                    detections = []
             elif model_type == "fire-smoke":
-                detections = detect_fire_smoke(frame)
-                anomaly = any(
-                    det.get("label", "").lower() in {"fire", "smoke"}
-                    for det in detections
-                )
+                try:
+                    detections = detect_fire_smoke(frame)
+                    anomaly = any(
+                        "HAZARD" in det.get("label", "").upper() or "FIRE" in det.get("label", "").upper() or "SMOKE" in det.get("label", "").upper()
+                        for det in detections
+                    )
+                except Exception as e:
+                    detections = []
             elif model_type == "fall":
-                detections = detect_fall(frame)
-                anomaly = any(
-                    det.get("label", "").lower() in {"fall", "fallen"}
-                    for det in detections
-                )
+                try:
+                    detections = detect_fall(frame)
+                    anomaly = any(
+                        det.get("fall", False) or "FALL" in det.get("label", "").upper()
+                        for det in detections
+                    )
+                except Exception as e:
+                    detections = []
             elif model_type == "pose":
                 try:
                     detections = detect_pose(frame)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     detections = []
-                anomaly = False
-            else:
-                detections = []
                 anomaly = False
 
             if detections:
@@ -99,41 +118,78 @@ def gen_live_detection(model_type):
                 if confs:
                     last_confidence = max(confs)
 
-            # High-visibility overlays for industrial operator screen
+            # 2. DRAW HIGH-CONTRAST INDUSTRIAL HUD OVERLAYS
             for det in detections:
-                if "bbox" in det:
-                    x1, y1, x2, y2 = map(int, det["bbox"])
-                    label = det.get("label", "object")
-                    status = det.get("status")
-                    
-                    if status == "Non-Compliant" or "NO-" in label or label.lower() in {"fire", "smoke", "fallen"}:
-                        color = (0, 0, 255) # Red for danger
-                        tag_text = f"ALERT: {label}" if "NO-" in label or label.lower() in {"fire", "smoke", "fallen"} else f"Worker #{det.get('worker_id', 1)}: VIOLATION"
-                    elif status == "Compliant" or label.lower() in {"stable", "hardhat", "safety vest"}:
-                        color = (0, 230, 115) # Emerald green
-                        tag_text = f"Worker #{det.get('worker_id', 1)}: Safe" if status == "Compliant" else label
-                    else:
-                        color = (255, 170, 0) # Cyan/amber for neutral
-                        tag_text = label
+                box = det.get("box") or det.get("bbox")
+                if box and len(box) == 4:
+                    x1, y1, x2, y2 = map(int, box)
+                    label = det.get("label", "Object")
+                    conf = det.get("confidence", 0.0)
+                    compliant = det.get("compliant", True)
+                    is_fall = det.get("fall", False)
+                    is_danger = not compliant or is_fall or any(k in label.upper() for k in ["NO-", "FALL", "HAZARD", "FIRE", "SMOKE"])
 
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-                    cv2.rectangle(frame, (x1, max(0, y1 - 22)), (x1 + len(tag_text) * 11, y1), color, -1)
+                    if is_danger:
+                        box_color = (0, 0, 255) # Red for hazard
+                        tag_bg = (0, 0, 220)
+                        tag_text = f"VIOLATION: {label} [{int(conf * 100)}%]"
+                    else:
+                        box_color = (0, 235, 120) # Emerald Green for safe
+                        tag_bg = (0, 180, 80)
+                        tag_text = f"{label} [{int(conf * 100)}%]"
+
+                    # Draw Bounding Box with Corner Accents
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
+                    corner_len = min(16, (x2 - x1) // 4, (y2 - y1) // 4)
+                    if corner_len > 0:
+                        # Top-Left
+                        cv2.line(frame, (x1, y1), (x1 + corner_len, y1), (0, 255, 255), 3)
+                        cv2.line(frame, (x1, y1), (x1, y1 + corner_len), (0, 255, 255), 3)
+                        # Bottom-Right
+                        cv2.line(frame, (x2, y2), (x2 - corner_len, y2), (0, 255, 255), 3)
+                        cv2.line(frame, (x2, y2), (x2, y2 - corner_len), (0, 255, 255), 3)
+
+                    # Tag Badge
+                    text_size = cv2.getTextSize(tag_text, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)[0]
+                    badge_w = text_size[0] + 12
+                    badge_h = text_size[1] + 10
+                    tag_y1 = max(0, y1 - badge_h)
+                    cv2.rectangle(frame, (x1, tag_y1), (x1 + badge_w, tag_y1 + badge_h), tag_bg, -1)
                     cv2.putText(
                         frame,
                         tag_text,
-                        (x1 + 4, max(14, y1 - 6)),
+                        (x1 + 6, tag_y1 + badge_h - 4),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         0.45,
-                        (0, 0, 0),
+                        (255, 255, 255),
                         1,
                         cv2.LINE_AA,
                     )
-                for point in det.get("keypoints", []):
-                    if len(point) >= 2:
-                        xk, yk = int(point[0]), int(point[1])
-                        if xk > 0 and yk > 0:
-                            cv2.circle(frame, (xk, yk), 3, (0, 200, 255), -1)
 
+                # Skeletal Keypoints & Bones
+                keypoints = det.get("keypoints", [])
+                if keypoints:
+                    pts = []
+                    for pt in keypoints:
+                        if len(pt) >= 2 and pt[0] > 0 and pt[1] > 0:
+                            pts.append((int(pt[0]), int(pt[1])))
+                        else:
+                            pts.append(None)
+
+                    # Draw Bones
+                    for p1_idx, p2_idx in POSE_CONNECTIONS:
+                        if p1_idx < len(pts) and p2_idx < len(pts):
+                            p1, p2 = pts[p1_idx], pts[p2_idx]
+                            if p1 is not None and p2 is not None:
+                                cv2.line(frame, p1, p2, (0, 240, 255), 2)
+
+                    # Draw Joints
+                    for pt in pts:
+                        if pt is not None:
+                            cv2.circle(frame, pt, 4, (0, 0, 255), -1)
+                            cv2.circle(frame, pt, 2, (255, 255, 255), -1)
+
+            # 3. AUTONOMOUS FORENSIC CAPTURE & BROADCAST
             now = time.time()
             if anomaly:
                 if anomaly_start is None:
@@ -144,7 +200,6 @@ def gen_live_detection(model_type):
                     and not incident_recorded
                     and (now - last_incident_time > incident_cooldown)
                 ):
-                    # Start recording
                     recording = True
                     frames_buffer = []
             else:
@@ -163,30 +218,20 @@ def gen_live_detection(model_type):
                         persistence_threshold=persistence_threshold,
                         camera_id=get_camera_index(),
                     )
-                    try:
-                        if not enqueued:
-                            print(
-                                "Failed to enqueue incident job. "
-                                "Skipping this incident."
-                            )
-                    except Exception as e:
-                        print(f"Failed to enqueue incident: {e}")
                     last_incident_time = now
                     incident_recorded = True
                     recording = False
                     frames_buffer = []
 
-            _, buffer = cv2.imencode(".jpg", frame)
-            frame_bytes = buffer.tobytes()
+            # Stream Frame
+            _, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
             yield (
                 b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
-                + frame_bytes
+                + buffer.tobytes()
                 + b"\r\n"
             )
     finally:
-        # If this was still the active session, monitoring has ended.
         if is_active(model_type, session_id):
             deactivate_models()
-        # Keep currently active model warm; sleep models when inactive.
         if get_active_model() != model_type:
             sleep_model(model_type)

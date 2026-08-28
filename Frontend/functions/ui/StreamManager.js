@@ -33,8 +33,10 @@ export class StreamManager {
     }
 
     // Connect to live backend stream with cache-busting timestamp
-    this.img.src = `${streamUrl}&_t=${Date.now()}`;
+    const sep = streamUrl.includes("?") ? "&" : "?";
+    this.img.src = `${streamUrl}${sep}_t=${Date.now()}`;
     this.img.style.display = "block";
+
     if (this.video) this.video.style.display = "none";
 
     this.img.onload = () => {

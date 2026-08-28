@@ -158,25 +158,28 @@ export class ApiClient {
     });
   }
 
-  async getHealth() {
-    return this._request("/copilot/health", {}, 5000);
+  async getSwarmStatus() {
+    return this._request("/swarm/status", {}, 3000);
   }
 
-  async getCameras() {
-    return this._request("/cameras", {}, 5000).catch(() => [
-      { id: 0, name: "Primary Edge" },
-      { id: 1, name: "Sector B Assembly Line" },
-      { id: 2, name: "Sector C Substation" },
-      { id: 3, name: "Sector D Logistics Bay" },
-    ]);
+  async toggleSwarmPatrol(active = null) {
+    const res = await this._request("/swarm/patrol/toggle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+    this.invalidateCache("/swarm");
+    return res;
   }
 
   getStreamUrl(mode = "video_feed", token = null) {
     const activeToken = token || stateManager.get("token");
-    const tokParam = activeToken ? `?token=${encodeURIComponent(activeToken)}` : "";
-    return `${this.baseUrl}/${mode}${tokParam}`;
+    const tokParam = activeToken ? `token=${encodeURIComponent(activeToken)}` : "";
+    const cleanMode = mode.startsWith("/") ? mode.slice(1) : mode;
+    return tokParam ? `${this.baseUrl}/${cleanMode}?${tokParam}` : `${this.baseUrl}/${cleanMode}`;
   }
 }
+
 
 
 export const apiClient = new ApiClient();

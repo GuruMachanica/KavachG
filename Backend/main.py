@@ -26,6 +26,7 @@ from realtime import router as realtime_router
 from settings import router as settings_router
 from cameras import router as cameras_router
 from report import router as report_router
+from swarm_router import router as swarm_router
 from copilot_router import router as copilot_router
 from incident_worker import start_incident_worker
 
@@ -135,6 +136,8 @@ app.include_router(settings_router, prefix="", tags=["Settings"])
 app.include_router(cameras_router, prefix="", tags=["Cameras"])
 app.include_router(report_router, prefix="", tags=["Reports"])
 app.include_router(copilot_router, prefix="", tags=["Copilot"])
+app.include_router(swarm_router, prefix="", tags=["Swarm"])
+
 
 
 @app.get("/")
