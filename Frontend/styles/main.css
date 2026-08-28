@@ -106,7 +106,9 @@ body {
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #ffffff 40%, var(--text-muted) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+
 }
 
 .login-panel .muted {
@@ -157,7 +159,9 @@ body {
   letter-spacing: -0.02em;
   background: linear-gradient(135deg, #ffffff 0%, var(--accent-cyan) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+
 }
 
 .sidebar-status {

@@ -71,7 +71,9 @@ body {
   letter-spacing: -0.02em;
   background: linear-gradient(135deg, #ffffff 0%, var(--accent-cyan) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+
 }
 
 .nav-links {
@@ -167,7 +169,9 @@ body {
 .hero h1 span {
   background: linear-gradient(135deg, var(--accent-cyan) 0%, #38bdf8 50%, #ffffff 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+
 }
 
 .hero p {
