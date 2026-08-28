@@ -12,3 +12,5 @@ services:
         value: "*"
       - key: JWT_SECRET
         value: "kavachg_production_jwt_super_secret_key_2026"
+      - key: MISTRAL_API_KEY
+        sync: false
