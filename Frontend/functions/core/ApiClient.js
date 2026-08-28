@@ -7,10 +7,11 @@ export class ApiClient {
       this.baseUrl = baseUrl;
     } else {
       const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:");
-      const storedUrl = typeof window !== "undefined" ? localStorage.getItem("kavachg_api_url") : null;
+      const storedUrl = typeof window !== "undefined" ? (localStorage.getItem("kavachg_api_url") || localStorage.getItem("apiUrl")) : null;
       const windowUrl = typeof window !== "undefined" ? window.API_BASE_URL : null;
       
-      this.baseUrl = storedUrl || windowUrl || (isLocal ? "http://127.0.0.1:8000" : "https://kavachg-api.onrender.com");
+      this.baseUrl = storedUrl || windowUrl || (isLocal ? "http://127.0.0.1:8000" : "https://kavachg.onrender.com");
+
     }
     this.cache = new Map(); // key -> { data, expiry }
     this.inFlight = new Map(); // key -> Promise
