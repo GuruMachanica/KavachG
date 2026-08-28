@@ -50,10 +50,14 @@ export class DetectionView extends BaseView {
         <canvas id="heatmap-canvas" class="canvas-overlay" style="pointer-events: none; ${this.heatmapActive ? "" : "display:none;"}"></canvas>
 
         <div class="viewport-hud">
-          <div class="stream-status-badge">
+          <div class="stream-status-badge" style="display: flex; align-items: center; gap: 6px;">
             <span class="pulse-dot"></span>
             <span id="stream-status-text">CONNECTING LIVE CAMERA...</span>
+            <button id="toggle-webcam-quick-btn" class="btn-secondary" style="font-size: 0.7rem; padding: 2px 8px; border-color: var(--accent-cyan); color: var(--accent-cyan); cursor: pointer;" title="Toggle Laptop WebCam vs Cloud CCTV">
+              ${selectedCam === "webcam" ? "☁️ Cloud Feed" : "📹 Use Laptop Camera"}
+            </button>
           </div>
+
 
           <div class="mode-selector">
             ${modes.map((m) => `
@@ -191,10 +195,10 @@ export class DetectionView extends BaseView {
       const canvasEl = this.container.querySelector("#zone-canvas");
       const heatEl = this.container.querySelector("#heatmap-canvas");
 
-      this.streamManager = new StreamManager(imgEl, badgeEl, videoEl);
+      this.streamManager = new StreamManager(imgEl, badgeEl, videoEl, canvasEl);
 
       if (selectedCam === "webcam") {
-        this.streamManager.startLocalWebcam(videoEl);
+        this.streamManager.startLocalWebcam(videoEl, canvasEl);
       } else {
         this.streamManager.connect(activeMode);
       }
@@ -212,7 +216,19 @@ export class DetectionView extends BaseView {
       }
     }
 
+    // Quick Webcam / Cloud Toggle Button
+    this.container.querySelector("#toggle-webcam-quick-btn")?.addEventListener("click", () => {
+      const curCam = stateManager.get("selectedCameraId");
+      if (curCam === "webcam") {
+        stateManager.set("selectedCameraId", 0);
+      } else {
+        stateManager.set("selectedCameraId", "webcam");
+      }
+      this.render();
+    });
+
     // Single / Matrix Toggle
+
     this.container.querySelector("#view-single-btn")?.addEventListener("click", () => {
       this.viewMode = "single";
       this.render();
