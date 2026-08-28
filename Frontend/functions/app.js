@@ -52,11 +52,26 @@ export class KavachGApplication {
 
 
   _setupEvents() {
+    // Auth events
+    eventBus.on("auth:logout", () => {
+      this._showLogin();
+      this.showToast("Logged out successfully.");
+      wsService.disconnect();
+    });
+
+    eventBus.on("auth:login", () => {
+      this._showApp();
+      this.switchTab("overview");
+      this.refreshData();
+      wsService.connect();
+    });
+
     // Tab switching
     eventBus.on("nav:tab", (tab) => this.switchTab(tab));
 
     // Toast notifications
     eventBus.on("toast", ({ message, type = "ok" }) => this.showToast(message, type));
+
 
     // Incident alerts
     eventBus.on("incident:alert", (incident) => {
