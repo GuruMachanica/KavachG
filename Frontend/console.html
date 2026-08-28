@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VajraNetra — Industrial AI Safety Command Center</title>
+  <link rel="icon" type="image/png" href="assets/image-removebg-preview.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <!-- Login Screen -->
+  <div id="login-view" class="login-viewport">
+    <section class="panel login-panel">
+      <div style="margin-bottom: 1.25rem; display: flex; justify-content: center;">
+        <img src="assets/emblem_clean.png" alt="VajraNetra Emblem" style="max-height: 80px; border: none; background: transparent; filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.45));" />
+      </div>
+      <div class="brand-badge">VAJRANETRA</div>
+
+      <h1>Safety Command Center</h1>
+      <p class="muted">Real-time edge computer vision, PPE compliance auditing, and self-healing industrial hazard monitoring.</p>
+      
+      <form id="login-form" class="stack" style="text-align: left;">
+        <label for="login-email">Operator / Admin Email</label>
+        <input id="login-email" type="email" required value="admin@vajranetra.com" placeholder="admin@vajranetra.com" autocomplete="username" />
+
+        
+        <label for="login-password">Security Password</label>
+        <input id="login-password" type="password" required value="change_this_admin_password" placeholder="••••••••••••" autocomplete="current-password" />
+        
+        <button id="login-btn" type="submit" class="btn-primary" style="margin-top: 0.5rem; width: 100%;">
+          <span>Authenticate & Launch Console</span>
+        </button>
+        <div id="login-error" class="error-text"></div>
+        <div style="text-align: center; margin-top: 1rem;">
+          <a href="index.html" style="color: var(--accent-cyan); font-size: 0.85rem; text-decoration: none;">
+            ← Return to Main Portal
+          </a>
+        </div>
+      </form>
+    </section>
+  </div>
+
+
+  <!-- Main Dashboard App Layout (Stitch Concept) -->
+  <div id="app-view" class="app-container hidden">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <div class="logo-row">
+            <img src="assets/emblem_clean.png" alt="VajraNetra Emblem" style="height: 32px; border: none; background: transparent; filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.4));" />
+            <h2>VajraNetra</h2>
+          </div>
+          <div class="sidebar-status">
+            <span class="pulse-dot"></span>
+            <span id="sidebar-status-text">System Optimal</span>
+          </div>
+        </div>
+
+
+        <button id="btn-new-audit" class="sidebar-btn-audit">
+          <span>+ NEW AUDIT</span>
+        </button>
+
+        <nav class="sidebar-nav">
+          <button data-tab="overview" class="sidebar-nav-btn active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Dashboard</span>
+          </button>
+          <button data-tab="detection" class="sidebar-nav-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Live Vision</span>
+          </button>
+          <button data-tab="digitaltwin" class="sidebar-nav-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>Digital Twin</span>
+          </button>
+          <button data-tab="incidents" class="sidebar-nav-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Audits & Logs</span>
+          </button>
+          <button data-tab="copilot" class="sidebar-nav-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>
+            <span>AI Copilot</span>
+          </button>
+          <button data-tab="settings" class="sidebar-nav-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Settings</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="sidebar-support-btn" class="sidebar-nav-btn" style="padding: 0.4rem 0.5rem; font-size: 0.8rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Support</span>
+        </button>
+        <button id="sidebar-syslog-btn" class="sidebar-nav-btn" style="padding: 0.4rem 0.5rem; font-size: 0.8rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+          <span>System Log</span>
+        </button>
+        
+        <div class="user-session-card">
+          <div class="user-avatar">04</div>
+          <div style="flex: 1; min-width: 0;">
+            <div id="welcome-text" style="font-size: 0.8rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Sec Officer 04</div>
+            <div style="font-size: 0.7rem; color: var(--accent-cyan);">Active Session</div>
+          </div>
+          <button id="logout-btn" class="btn-danger-outline" style="padding: 2px 6px; font-size: 0.7rem;" title="Sign Out">✕</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <main class="main-wrapper">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="search-bar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search systems, alerts, personnel..." />
+          <kbd>⌘K</kbd>
+        </div>
+
+        <div class="header-right">
+          <div id="system-status-indicator" class="status-pill status-pill-safe" style="padding: 4px 10px; font-size: 0.75rem;">
+            <span class="pulse-dot"></span>
+            <span id="system-status-text">All Systems Operational</span>
+          </div>
+
+          <button id="voice-toggle-btn" class="icon-btn" title="AI Voice PA: Enabled" style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <span>Voice ON</span>
+          </button>
+
+          <button id="alarm-toggle-btn" class="icon-btn" title="Audio Alarm: Enabled" style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+            <span>Sound ON</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- View Containers -->
+      <div class="content-body">
+        <section id="tab-overview" class="tab-content"></section>
+        <section id="tab-detection" class="tab-content hidden"></section>
+        <section id="tab-digitaltwin" class="tab-content hidden"></section>
+        <section id="tab-incidents" class="tab-content hidden"></section>
+        <section id="tab-copilot" class="tab-content hidden"></section>
+        <section id="tab-settings" class="tab-content hidden"></section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal / Media Overlay Container -->
+  <div id="media-modal" class="modal-backdrop hidden">
+    <div class="modal-content panel">
+      <div class="modal-header">
+        <h3 id="modal-title">Forensic Incident Evidence</h3>
+        <button id="modal-close-btn" class="close-btn">&times;</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Animation, 3D & EmailJS Libraries -->
+  <script src="functions/libs/three.min.js"></script>
+  <script src="functions/libs/anime.min.js"></script>
+  <script src="functions/libs/jspdf.umd.min.js"></script>
+  <script src="functions/libs/html2canvas.min.js"></script>
+  <script src="functions/libs/email.min.js"></script>
+
+  <script type="module" src="functions/app.js"></script>
+</body>
+</html>

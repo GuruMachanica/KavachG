@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OSHA Standards — VajraNetra Regulatory Compliance</title>
+  <link rel="icon" type="image/png" href="assets/emblem_clean.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/landing.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="navbar">
+      <a href="index.html" class="brand-wrapper">
+        <img src="assets/emblem_clean.png" alt="VajraNetra Emblem" class="brand-logo" />
+        <span class="brand-name">VAJRANETRA</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="modules.html">AI Modules</a></li>
+        <li><a href="demo.html">Demo Videos</a></li>
+        <li><a href="architecture.html">Architecture</a></li>
+        <li><a href="compliance.html" style="color: var(--accent-cyan); font-weight: 700;">OSHA Standards</a></li>
+        <li><a href="benchmarks.html">Benchmarks</a></li>
+      </ul>
+
+      <a href="console.html" class="btn-cta">
+        <span>Launch Command Center</span>
+        <span>→</span>
+      </a>
+    </header>
+
+    <section class="hero" style="padding-bottom: 2rem;">
+      <div class="badge-pill">
+        <span>REGULATORY MAPPING ENGINE</span>
+        <span>•</span>
+        <span>29 CFR 1910 COMPLIANCE</span>
+      </div>
+      <h1>Automated <span>OSHA 1910 Standards</span></h1>
+      <p>Transforming complex federal occupational safety mandates into automated, continuous optical edge compliance audits.</p>
+    </section>
+
+    <!-- OSHA Compliance Matrix -->
+    <section class="features">
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Standard 1 -->
+        <div class="feature-card" style="display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: center;">
+          <div>
+            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-cyan); font-weight: 700;">OSHA 1910.132 / 135</span>
+            <h3 style="font-size: 1.25rem; margin-top: 0.25rem;">Personal Protective Equipment</h3>
+            <span class="badge-pill" style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--accent-emerald); border-color: var(--accent-emerald);">AUTOMATED PASS/FAIL</span>
+          </div>
+          <div>
+            <p style="margin-bottom: 0.5rem;">Mandates that employers assess workplace hazards and ensure mandatory protective equipment is properly fitted and worn by all operators in active machining zones.</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">
+              <strong>VajraNetra Action:</strong> Continuously computes person-to-hardhat and vest IoU intersections, generating timestamped violation logs with 1-click photo evidence.
+            </p>
+          </div>
+        </div>
+
+        <!-- Standard 2 -->
+        <div class="feature-card" style="display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: center;">
+          <div>
+            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber); font-weight: 700;">OSHA 1910.28 / 22</span>
+            <h3 style="font-size: 1.25rem; margin-top: 0.25rem;">Walking-Working Surfaces & Fall Arrest</h3>
+            <span class="badge-pill" style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--accent-amber); border-color: var(--accent-amber);">SKELETAL POSE TRACKER</span>
+          </div>
+          <div>
+            <p style="margin-bottom: 0.5rem;">Regulates slip, trip, and elevated fall risks across elevated platforms, catwalks, and open floor perimeters.</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">
+              <strong>VajraNetra Action:</strong> Evaluates skeletal joint velocities and spine inclination angles, immediately triggering PA alarm siren alerts upon sudden vertical trajectory shifts.
+            </p>
+          </div>
+        </div>
+
+        <!-- Standard 3 -->
+        <div class="feature-card" style="display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: center;">
+          <div>
+            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-red); font-weight: 700;">OSHA 1910.38 / 1200</span>
+            <h3 style="font-size: 1.25rem; margin-top: 0.25rem;">Emergency Action Plans & Fire Safety</h3>
+            <span class="badge-pill" style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--accent-red); border-color: var(--accent-red);">THERMAL DETECTOR</span>
+          </div>
+          <div>
+            <p style="margin-bottom: 0.5rem;">Requires rapid detection and immediate evacuation procedures for fires, toxic chemical leaks, and thermal emergencies.</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">
+              <strong>VajraNetra Action:</strong> Sub-second flame and plume localization triggering automated EmailJS notifications to plant safety directors and real-time PA voice commands.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2026 VajraNetra — Autonomous Industrial AI Safety Command Center. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="functions/libs/three.min.js"></script>
+  <script type="module">
+    import { threeBackground } from "./functions/ui/ThreeBackground.js";
+    window.addEventListener("DOMContentLoaded", () => threeBackground.init());
+  </script>
+</body>
+</html>

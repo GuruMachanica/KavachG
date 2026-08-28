@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture — VajraNetra High-Concurrency Engine</title>
+  <link rel="icon" type="image/png" href="assets/emblem_clean.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/landing.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="navbar">
+      <a href="index.html" class="brand-wrapper">
+        <img src="assets/emblem_clean.png" alt="VajraNetra Emblem" class="brand-logo" />
+        <span class="brand-name">VAJRANETRA</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="modules.html">AI Modules</a></li>
+        <li><a href="demo.html">Demo Videos</a></li>
+        <li><a href="architecture.html" style="color: var(--accent-cyan); font-weight: 700;">Architecture</a></li>
+        <li><a href="compliance.html">OSHA Standards</a></li>
+        <li><a href="benchmarks.html">Benchmarks</a></li>
+      </ul>
+
+      <a href="console.html" class="btn-cta">
+        <span>Launch Command Center</span>
+        <span>→</span>
+      </a>
+    </header>
+
+    <section class="hero" style="padding-bottom: 2rem;">
+      <div class="badge-pill">
+        <span>SYSTEM TOPOLOGY</span>
+        <span>•</span>
+        <span>ZERO-OVERHEAD STACK</span>
+      </div>
+      <h1>Enterprise <span>System Architecture</span></h1>
+      <p>Engineered for mission-critical industrial manufacturing with pure asynchronous Python on the edge and modular Vanilla JS in the browser.</p>
+    </section>
+
+    <!-- Architecture Pillars Grid -->
+    <section class="features">
+      <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));">
+        
+        <!-- Python FastAPI Backend -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-cyan);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <h3>Pure Python Edge Core</h3>
+          <p>Built with asynchronous FastAPI and Uvicorn workers. Dispatches frame buffers into PyTorch CUDA and TensorRT acceleration runtimes with zero garbage-collection latency spikes.</p>
+          <ul style="margin-top: 1rem; padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            <li>FastAPI Non-blocking Async Event Loop</li>
+            <li>Direct OpenCV Multi-Threaded Capture</li>
+            <li>Sub-42ms Optical Inference Latency</li>
+          </ul>
+        </div>
+
+        <!-- SQLite WAL Concurrency -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-emerald);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          </div>
+          <h3>SQLite WAL Concurrency</h3>
+          <p>Utilizes Write-Ahead Logging (WAL) mode to permit concurrent live telemetry writes from multiple camera inference workers while frontend operators execute complex audit queries.</p>
+          <ul style="margin-top: 1rem; padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            <li>PRAGMA journal_mode = WAL</li>
+            <li>Cryptographic Passlib Password Hashing</li>
+            <li>Zero Database Lock Contentions</li>
+          </ul>
+        </div>
+
+        <!-- Vanilla JS Frontend -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-amber);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <h3>Modular Vanilla JS Frontend</h3>
+          <p>Zero-dependency framework architecture using ES6 native modules, Three.js 3D isometric factories, Canvas 2D overlays, and Web Speech PA emergency dispatch.</p>
+          <ul style="margin-top: 1rem; padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            <li>Native ES Module Component Architecture</li>
+            <li>Hardware-Accelerated WebGL Rendering</li>
+            <li>Instant Client-Side OSHA PDF Generation</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2026 VajraNetra — Autonomous Industrial AI Safety Command Center. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="functions/libs/three.min.js"></script>
+  <script type="module">
+    import { threeBackground } from "./functions/ui/ThreeBackground.js";
+    window.addEventListener("DOMContentLoaded", () => threeBackground.init());
+  </script>
+</body>
+</html>

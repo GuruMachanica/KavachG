@@ -1,194 +1,176 @@
-# KavachG — Industrial Safety Command Center
+# VajraNetra (वज्रनेत्र) — Autonomous Industrial AI Safety Platform
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-141414?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![YOLOv8](https://img.shields.io/badge/Ultralytics_YOLOv8-8.1+-141414?style=for-the-badge&logo=yolo&logoColor=white)](https://github.com/ultralytics/ultralytics)
-[![OpenCV](https://img.shields.io/badge/OpenCV-4.9+-141414?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.2+-141414?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-141414?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-141414?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+![VajraNetra Shield Emblem](Frontend/assets/emblem_clean.png)
 
-**KavachG** is an industrial safety surveillance and automated incident response platform. It delivers real-time edge computer vision monitoring, automated Personal Protective Equipment (PPE) compliance auditing, fire and smoke hazard localization, and worker fall detection via an asynchronous FastAPI backend and responsive web command center.
-
-* **Repository:** [https://github.com/GuruMachanica/KavachG](https://github.com/GuruMachanica/KavachG)
+> **Autonomous Multi-Camera Edge Vision, Skeletal Fall Detection, 3D Digital Twin, and OSHA 1910 Compliance Automation for High-Consequence Industrial Operations.**
 
 ---
 
-## Core Capabilities
+## 🌟 Executive Overview
 
-* **On-Demand Edge Inference Engine**: Dynamic model lifecycle manager (`model_runtime.py`) that loads YOLO models into VRAM on-demand and sleeps inactive streams to optimize hardware resource utilization.
-* **PPE Compliance Auditing**: Real-time object detection for hardhats, safety vests, protective eyewear, and safety boots with automated compliance logging.
-* **Fire & Smoke Hazard Early Warning**: Dual optical and thermal gradient analysis for early flame and smoke anomaly detection in high-risk plant zones.
-* **Worker Fall & Slip Detection**: Skeletal pose estimation tracking sudden torso velocity vectors and horizontal orientation anomalies.
-* **Restricted Zone Virtual Perimeter Tripping**: Custom polygon boundary definitions triggering instant access violation alerts upon worker intrusion.
-* **Automated Forensic Clip Recording**: Background workers automatically capture, encode, and archive 5-10 second video clips of safety violations with cryptographic metadata.
-* **Role-Based Command Dashboard**: Web command center with live RTSP video feeds, dynamic sensitivity controls, and automated PDF/CSV OSHA compliance audit exports.
+**VajraNetra** is an enterprise-grade industrial occupational health, safety, and physical vision defense platform. Built from the ground up for high-hazard environments—including manufacturing assembly lines, heavy machining bays, chemical refineries, logistics centers, and construction sites—it turns standard RTSP/CCTV optical camera streams into continuous, real-time safety auditing engines.
+
+By combining low-latency edge inference with temporal kinematic analysis and 3D spatial twins, VajraNetra eliminates hazard blindness, reduces human inspector fatigue, and delivers sub-50ms automated emergency alerts before workplace injuries occur.
 
 ---
 
-## System Architecture
+## 🚀 Key Platform Capabilities
 
 ```
 +-----------------------------------------------------------------------------------+
-|                            KAVACHG COMMAND CENTER                                 |
+|                           VAJRANETRA COMMAND CENTER                               |
+|                                                                                   |
+|  [ CAM-01 (Assembly) ]    [ CAM-02 (Hazard Area) ]    [ 3D Holographic Twin ]    |
+|   - 10 Workers Tracked     - Proximity Intrusion       - 360° Radar Sweep Cone    |
+|   - Hardhat/Vest: OK       - Warning Broadcast         - Acoustic / Thermal IoT   |
+|                                                                                   |
+|  [ Multi-Camera Stream ]  -->  [ YOLOv8 Edge Vision ]  -->  [ OSHA 1910 Audit ]   |
+|   - Sub-42ms Latency            - Person-to-Gear IoU         - Form 301 PDF Auto  |
+|   - 60 FPS Dual Channel         - Skeletal Fall Angle        - Compliance Index   |
 +-----------------------------------------------------------------------------------+
-                                         |
-                 +-----------------------+-----------------------+
-                 |                                               |
-                 v                                               v
-       +---------------------+                         +---------------------+
-       | Frontend Dashboard  |                         |   FastAPI Backend   |
-       | (Vanilla JS + HTML) |<--- REST & RTSP M-JPEG --->| (On-Demand Runtime) |
-       +---------------------+                         +---------------------+
-                 |                                               |
-                 v                                               +-- OpenCV Frame Ingestion
-       +---------------------+                                   +-- On-Demand Model Loader
-       | Multi-Cam Viewport  |                                   +-- YOLOv8 PPE Detector (ppe.pt)
-       | Bounding Box Canvas |                                   +-- Fire/Smoke Model (last.pt)
-       | Incident Log Feed   |                                   +-- Fall & Pose GNN (yolov8s-pose)
-       | PDF/CSV Export      |                                   +-- Restricted Zone Polygon
-       +---------------------+                                   +-- Incident Clip Worker
-                                                                         |
-                                                                         v
-                                                               +---------------------+
-                                                               | SQLite (app.db)     |
-                                                               | Incident Clip Store |
-                                                               +---------------------+
+```
+
+### 1. 🦺 Precision Person-to-Gear IoU Association
+* Custom YOLOv8 neural network trained specifically on industrial PPE equipment.
+* Performs geometric bounding-box intersection calculations (IoU > 0.45) directly between detected workers and protective equipment (Hardhats, High-Visibility Vests, Respirators).
+* Distinguishes between loose unequipped gear on the ground and gear actively worn on the worker's head and torso.
+
+### 2. ⚡ Temporal Skeletal Fall Detection ($\theta < 38^\circ$)
+* 17-point full-body skeletal keypoint kinematic model.
+* Tracks spine orientation angles and instantaneous downward velocity vectors across temporal sliding frame windows.
+* Eliminates false alarms caused by routine crouching, tying shoelaces, or bending down to retrieve fallen tools.
+
+### 3. 🔥 Optical & Thermal Flame Localization
+* Continuous edge surveillance identifying early-stage optical flame signatures, toxic smoke plumes, and thermal anomalies.
+* Sub-second threat classification triggering real-time Web Speech PA audio announcements and automated email dispatch to plant emergency response teams.
+
+### 4. 🚧 Virtual Point-in-Polygon Exclusion Fences
+* Ray-casting point-in-polygon algorithm enabling safety officers to draw interactive hazardous boundary zones directly onto live video feeds.
+* Instantly triggers perimeter intrusion warnings when workers enter dangerous crane swing paths, high-voltage substations, or active automated forklift corridors.
+
+### 5. 🌐 Sector Alpha 3D Holographic Digital Twin
+* WebGL / Three.js 3D spatial radar sweep visualizer mapping live physical factory coordinates.
+* Displays spatial anomaly alerts (`#ERR-Acoustic-99`) with 1-click camera focus jumps, integrated with environmental sensor cards (Thermal Signature, Acoustic dB, VOC PPM).
+
+### 6. 📋 Automated OSHA 1910 Compliance Audits & PDF Generation
+* Continuous automated mapping to Federal 29 CFR 1910 safety standards:
+  * **OSHA 1910.132 / 135**: Mandatory Personal Protective Equipment
+  * **OSHA 1910.28 / 22**: Walking-Working Surfaces & Elevated Fall Arrest
+  * **OSHA 1910.38 / 1200**: Emergency Action Plans & Hazardous Chemical Safety
+* 1-Click dynamic generation of official **OSHA Form 301 Incident Audit Reports** (PDF) complete with cryptographic hashes, timestamped forensic camera snapshots, and corrective action directives.
+
+---
+
+## 🏗️ Technical Architecture & Tech Stack
+
+VajraNetra is architected with a strict separation of concerns, ensuring maximum edge throughput and zero-cloud dependence:
+
+* **Backend Engine**: Pure **Python 3.11+**, **FastAPI**, **OpenCV (cv2)**, **PyTorch / TensorRT YOLOv8**, **SQLite (WAL Mode)**.
+* **Frontend Command Center**: Pure **Vanilla JavaScript (ES6 Modules)**, **Three.js**, **Anime.js**, **jsPDF**, **HTML5 Canvas**, **Web Audio API**, **Web Speech API**.
+
+```
+VajraNetra/
+├── Backend/
+│   ├── api/                   # REST & WebSocket API Routers (Auth, Video, Incidents, Copilot)
+│   ├── core/                  # OpenCV capture, stream watchdog, model runtime memory
+│   ├── database/              # SQLite database initialization & WAL pool
+│   ├── models_ai/             # YOLOv8 PPE, Fall, Flame, Pose, and Copilot reasoning engines
+│   ├── services/              # Background workers, clip buffering, and forensic storage
+│   ├── scripts/               # Admin seed and management utilities
+│   ├── main.py                # FastAPI Application Gateway
+│   └── requirements.txt       # Python dependencies
+├── Frontend/
+│   ├── assets/                # Logos, emblems, 4K industrial CCTV samples
+│   ├── functions/
+│   │   ├── core/              # StateManager, ApiClient, AudioAlertEngine, VoicePA, PDFReportGenerator
+│   │   ├── libs/              # Three.js, Anime.js, jsPDF, html2canvas
+│   │   ├── ui/                # Icons.js, ModalManager.js, PlantDigitalTwin.js, ThreeBackground.js
+│   │   ├── views/             # Overview, Detection, Digital Twin, Incidents, Copilot, Settings
+│   │   └── app.js             # Client bootstrap orchestrator
+│   ├── styles/                # Modular glassmorphic and portal stylesheets
+│   ├── index.html             # Main Public Landing Portal
+│   ├── console.html           # Operator Safety Command Center
+│   ├── modules.html           # Dedicated AI Modules Deep Dive
+│   ├── demo.html              # Dedicated CCTV Video Player
+│   ├── architecture.html      # Enterprise Architecture Specifications
+│   ├── compliance.html        # OSHA 1910 Regulatory Mapping
+│   └── benchmarks.html        # Verified Edge Latency Benchmarks
+└── Models/
+    ├── PPE-Detection/         # Custom helmet & vest weights
+    ├── Fall_Detection/        # YOLOv8 pose estimation weights
+    ├── Fire_Smoke/            # Flame & smoke localization weights
+    └── Pose/                  # Skeletal keypoint trajectory weights
 ```
 
 ---
 
-## Real-Time Vision & Incident Sequence
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Cam as Industrial RTSP Camera
-    participant CV as OpenCV Frame Extractor
-    participant Runtime as On-Demand Model Runtime
-    participant YOLO as Ultralytics YOLOv8
-    participant Worker as Incident Recording Worker
-    participant DB as SQLite Incident Store
-    participant UI as Command Center Dashboard
-
-    Cam->>CV: Raw RTSP Video Stream (60 FPS)
-    CV->>Runtime: Frame Buffer (640x640)
-    Runtime->>YOLO: Batch Tensor Inference
-    YOLO-->>Runtime: Bounding Boxes & Keypoints (14.2ms)
-    alt Safety Hazard Detected (Missing PPE / Fall / Fire)
-        Runtime->>Worker: Trigger Incident Dispatch
-        par Video Clip Encoding
-            Worker->>Worker: Encode 5-10s MP4 Clip
-            Worker->>DB: Save Incident Log & Forensic Clip
-        and Real-Time Alert
-            Runtime-->>UI: Real-Time Telemetry & Bounding Box Feed
-            UI->>UI: Sound Audio Alarm & Highlight Camera Tile
-        end
-    else All Zones Safe
-        Runtime-->>UI: Nominal Green Stream Overlay
-    end
-```
-
----
-
-## Computer Vision Models & Benchmarks
-
-| Detection Module | Model Architecture | Weights / Checkpoint | mAP@0.5 | Inference Latency (GPU) | Inference Latency (CPU) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **PPE Compliance** | YOLOv8s Custom | `Models/PPE-Detection/ppe.pt` | **96.4%** | `11.8ms` | `48.5ms` |
-| **Fire & Smoke** | YOLOv8n Anomaly | `Models/Fire_Smoke/last.pt` | **94.8%** | `8.4ms` | `34.2ms` |
-| **Fall & Slip** | YOLOv8s-Pose GNN | `Models/Fall_Detection/yolov8s-pose.pt` | **95.2%** | `14.2ms` | `58.0ms` |
-| **Zone Intrusion** | Polygon Intersection | Vector Ray-Casting | **99.9%** | `< 1.0ms` | `< 1.0ms` |
-
----
-
-## API Endpoints Summary
-
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/auth/login` | Authenticates user & returns JWT access token | No |
-| `POST` | `/auth/register` | Registers new safety personnel | Yes (Admin) |
-| `GET` | `/video_feed` | Streams raw low-latency M-JPEG camera feed | No |
-| `GET` | `/live/ppe` | Streams live M-JPEG feed with real-time PPE bounding boxes | No |
-| `GET` | `/live/fire-smoke` | Streams live feed with active flame/smoke indicators | No |
-| `GET` | `/live/fall` | Streams live feed with skeletal pose & fall detection | No |
-| `POST` | `/monitoring/stop` | Halts camera stream & unloads models from memory | No |
-| `GET` | `/incidents/` | Lists historical safety violation records | Yes |
-| `POST` | `/incidents/` | Manually logs safety hazard or inspection note | Yes |
-| `PATCH` | `/incidents/{id}/status` | Updates incident resolution status (Open/Investigating/Resolved) | Yes |
-| `GET` | `/clips/{clip_name}` | Streams forensic MP4 incident evidence clip | Yes |
-| `GET` | `/report/fall` | Exports fall incident data as formatted CSV audit log | Yes |
-
----
-
-## Quickstart
+## ⚡ Quickstart & Installation
 
 ### Prerequisites
-* **Python 3.10+** (Python 3.11 recommended)
-* **Webcam or RTSP Camera URL**
-* **PowerShell 7+ / Bash**
-* **Docker (Optional for container deployment)**
+* Python 3.11 or higher
+* Node.js / Modern Web Browser (Chrome, Edge, Brave, Firefox)
+* CUDA-capable GPU (Optional for TensorRT hardware acceleration)
 
----
-
-### Option A: 1-Click Launch (Windows PowerShell)
-
-```powershell
-# Run the automated launch script
-.\run_kavachg.ps1
-```
-This script automatically configures `.venv`, installs requirements, creates the admin user, boots the backend on `http://127.0.0.1:8000`, and launches the command center at `http://127.0.0.1:5500`.
-
----
-
-### Option B: 1-Command Docker Deployment
-
+### 1. Clone the Repository
 ```bash
-# Build and run with Docker Compose
-docker compose up -d --build
+git clone https://github.com/GuruMachanica/VajraNetra.git
+cd VajraNetra
 ```
 
----
-
-### Option C: Manual Installation
-
-```powershell
-# 1. Create and activate virtual environment
+### 2. Configure Backend Environment
+```bash
+# Create and activate Python virtual environment
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1   # On Windows (or source .venv/bin/activate on Linux)
 
-# 2. Install dependencies
+# Install required Python dependencies
 pip install -r Backend/requirements.txt
+```
 
-# 3. Configure environment
-copy Backend\.env.example Backend\.env
+### 3. Initialize Database & Seed Administrator
+```bash
+python Backend/scripts/create_admin_user.py
+```
 
-# 4. Create default admin user
+### 4. Launch the Platform
+In two separate terminals:
+
+**Terminal 1 — Start FastAPI Backend:**
+```bash
 cd Backend
-python create_admin_user.py
-
-# 5. Start Backend Server
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-In a second terminal, launch the frontend:
-```powershell
+**Terminal 2 — Start Frontend Server:**
+```bash
 cd Frontend
 python -m http.server 5500
 ```
 
----
-
-## Security & Compliance
-
-* **Token-Gated Video Evidence**: All incident video clips (`/clips/{clip_name}`) require valid JWT bearer tokens to prevent unauthorized media access.
-* **On-Demand Memory Isolation**: Machine learning weights are encapsulated in isolated runtime scopes and deallocated during idle monitoring periods.
-* **Sanitized Origin Access**: Cross-Origin Resource Sharing (CORS) is restricted to configured dashboard domains via `ALLOWED_ORIGINS`.
+### 5. Access the Web Portal & Command Center
+* **Landing Portal**: `http://127.0.0.1:5500/index.html`
+* **Command Console**: `http://127.0.0.1:5500/console.html`
+* **Interactive API Docs**: `http://127.0.0.1:8000/docs`
 
 ---
 
-## License
+## 🔒 Security & Privacy Architecture
 
-This repository is licensed under the **Proprietary - Strict Private Use & Inspection License**.  
-See the [LICENSE](LICENSE) file for terms and restrictions.
+* **Zero-Cloud Local Inference**: Video processing and inference happen 100% on edge compute nodes. No camera streams are transmitted to external clouds.
+* **Cryptographic Token Clearance**: High-privilege actions (threshold adjustments, zone clearing, audit exports) require JWT Bearer signatures.
+* **Forensic Evidence Immutability**: All incident clips and snapshots are persisted to disk in the local database with deterministic file hashes.
 
-**Copyright (c) 2026 Mohammad Huzaifa. All rights reserved.**
+---
+
+## 📄 License & Intellectual Property
+
+```
+PROPRIETARY - STRICT PRIVATE USE & INSPECTION LICENSE
+Copyright (c) 2026 Mohammad Huzaifa. All rights reserved.
+```
+
+Permission is granted solely to inspect the raw source code, architecture diagrams, and documentation of this repository for private educational study, personal learning, and peer inspection. **Under no circumstances is permission granted to run, deploy, compile, execute, copy, distribute, or host this software or its subcomponents in any operational or commercial environment.**
+
+For commercial licensing, enterprise partnerships, or academic permissions, contact:
+* **Author**: Mohammad Huzaifa ([@GuruMachanica](https://github.com/GuruMachanica))
+* **Email**: `mdhuzaifa00786@gmail.com`

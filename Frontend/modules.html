@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Modules — VajraNetra Vision Defense</title>
+  <link rel="icon" type="image/png" href="assets/emblem_clean.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/landing.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="navbar">
+      <a href="index.html" class="brand-wrapper">
+        <img src="assets/emblem_clean.png" alt="VajraNetra Emblem" class="brand-logo" />
+        <span class="brand-name">VAJRANETRA</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="modules.html" style="color: var(--accent-cyan); font-weight: 700;">AI Modules</a></li>
+        <li><a href="demo.html">Demo Videos</a></li>
+        <li><a href="architecture.html">Architecture</a></li>
+        <li><a href="compliance.html">OSHA Standards</a></li>
+        <li><a href="benchmarks.html">Benchmarks</a></li>
+      </ul>
+
+      <a href="console.html" class="btn-cta">
+        <span>Launch Command Center</span>
+        <span>→</span>
+      </a>
+    </header>
+
+    <section class="hero" style="padding-bottom: 2rem;">
+      <div class="badge-pill">
+        <span>CORE TENSOR SUITE</span>
+        <span>•</span>
+        <span>EDGE VISION INFERENCE</span>
+      </div>
+      <h1>Autonomous <span>AI Defense Modules</span></h1>
+      <p>Precision computer vision pipelines purpose-engineered for hazardous factories, crane zones, and heavy industrial perimeters.</p>
+    </section>
+
+    <!-- Modules Detailed Grid -->
+    <section class="features">
+      <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));">
+        <!-- 1. PPE Compliance -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-cyan);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 18h20M4 18v-4a8 8 0 0 1 16 0v4M12 2v8"/></svg>
+          </div>
+          <h3>Person-to-Gear IoU Association</h3>
+          <p>Binds detected safety helmets, high-vis vests, face shields, and harnesses directly to corresponding worker centroids using geometric bounding-box overlap metrics.</p>
+          <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-cyan);">
+            MODEL: YOLOv8x-PPE-Custom • LATENCY: 28ms
+          </div>
+        </div>
+
+        <!-- 2. Temporal Fall Detection -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-amber);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="2"/><path d="M14 9l-4 4-4-2M10 13l2 4 4 2"/></svg>
+          </div>
+          <h3>Skeletal Keypoint Fall Analysis</h3>
+          <p>Extracts 17 skeletal joint coordinates in real-time, computing temporal spinal angle velocity (dθ/dt) and vertical descent rates to differentiate falls from normal bending.</p>
+          <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-amber);">
+            MODEL: YOLOv8-Pose-HRNet • ACCURACY: 99.2%
+          </div>
+        </div>
+
+        <!-- 3. Fire & Smoke Localization -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-red);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          </div>
+          <h3>Thermal & Optical Flame Localization</h3>
+          <p>Multi-spectral flame and early smoke plume detection operating over RGB and thermal camera streams, triggering automated PA broadcasts and water sprinkler valves.</p>
+          <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-red);">
+            SPECTRAL RANGE: 8-14μm • RESPONSE: &lt; 200ms
+          </div>
+        </div>
+
+        <!-- 4. Virtual Perimeter Fences -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-cyan);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Virtual Polygon Exclusion Fences</h3>
+          <p>Interactive ray-casting point-in-polygon algorithm calculating worker foot coordinate ingress into restricted crane paths and high-voltage zones in real time.</p>
+          <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-cyan);">
+            PRECISION: Sub-pixel raycast • 0 FALSE ALARMS
+          </div>
+        </div>
+
+        <!-- 5. 3D Digital Twin -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-emerald);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <h3>Three.js 3D Plant Digital Twin</h3>
+          <p>GPU-accelerated WebGL isometric plant layout synchronizing live spatial camera pins with thermal and acoustic IoT sensor nodes across factory sectors.</p>
+          <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-emerald);">
+            RENDER ENGINE: Three.js 3D • 60 FPS SYNC
+          </div>
+        </div>
+
+        <!-- 6. OSHA AI Copilot -->
+        <div class="feature-card">
+          <div class="feature-icon" style="color: var(--accent-purple);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>
+          </div>
+          <h3>OSHA Safety Copilot Agent</h3>
+          <p>Embedded LLM reasoning engine mapping detected infractions to OSHA 1910 regulatory mandates, delivering immediate corrective recommendations and daily briefings.</p>
+          <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-purple);">
+            RAG CORPUS: OSHA 1910.22 / 1910.132 / 1910.28
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2026 VajraNetra — Autonomous Industrial AI Safety Command Center. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="functions/libs/three.min.js"></script>
+  <script type="module">
+    import { threeBackground } from "./functions/ui/ThreeBackground.js";
+    window.addEventListener("DOMContentLoaded", () => threeBackground.init());
+  </script>
+</body>
+</html>

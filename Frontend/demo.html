@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo Videos — VajraNetra Industrial Surveillance</title>
+  <link rel="icon" type="image/png" href="assets/emblem_clean.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/landing.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="navbar">
+      <a href="index.html" class="brand-wrapper">
+        <img src="assets/emblem_clean.png" alt="VajraNetra Emblem" class="brand-logo" />
+        <span class="brand-name">VAJRANETRA</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="modules.html">AI Modules</a></li>
+        <li><a href="demo.html" style="color: var(--accent-cyan); font-weight: 700;">Demo Videos</a></li>
+        <li><a href="architecture.html">Architecture</a></li>
+        <li><a href="compliance.html">OSHA Standards</a></li>
+        <li><a href="benchmarks.html">Benchmarks</a></li>
+      </ul>
+
+      <a href="console.html" class="btn-cta">
+        <span>Launch Command Center</span>
+        <span>→</span>
+      </a>
+    </header>
+
+    <section class="hero" style="padding-bottom: 2rem;">
+      <div class="badge-pill">
+        <span>INDUSTRIAL CCTV PLAYBACK</span>
+        <span>•</span>
+        <span>SURVEILLANCE ARCHIVE</span>
+      </div>
+      <h1>Industrial <span>Demo Video Feeds</span></h1>
+      <p>Watch recorded optical edge vision streams detecting PPE infractions, forklift proximities, and fall events in live factory environments.</p>
+    </section>
+
+    <!-- Interactive Video Showcase Grid -->
+    <section class="features">
+      <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+        
+        <!-- Video 1: Production Floor PPE Detection -->
+        <div class="demo-card" style="background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.5rem; backdrop-filter: blur(16px);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <span class="badge-pill" style="margin-bottom: 0.25rem; font-size: 0.7rem;">CCTV FEED #04 • ACTIVE SCAN</span>
+              <h3 style="font-size: 1.25rem; font-weight: 700;">Assembly Cell — Person-to-Gear PPE Verification</h3>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-emerald);">● RECORDED LIVE (4K / 30 FPS)</span>
+          </div>
+
+          <div style="position: relative; border-radius: 12px; overflow: hidden; height: 480px; background: #000; box-shadow: 0 16px 36px -8px rgba(0,0,0,0.7);">
+            <img id="vid-1-img" src="assets/cctv_factory_1.jpg" alt="CCTV Assembly Floor" style="width: 100%; height: 100%; object-fit: cover;" />
+
+            <!-- CCTV Playback Bar Overlay -->
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(3,7,18,0.95) 0%, transparent 100%); padding: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="btn-cta" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" id="play-btn-1">
+                  ▶ Play Loop
+                </button>
+                <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-cyan);" id="timecode-1">00:04:18 / 00:15:00</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <span style="background: rgba(0,240,255,0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-size: 0.75rem; font-family: var(--font-mono); padding: 4px 10px; border-radius: 6px;">
+                  10 WORKERS DETECTED • 100% COMPLIANT
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 2: Logistics Warehouse Forklift Danger Zone -->
+        <div class="demo-card" style="background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.5rem; backdrop-filter: blur(16px);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <span class="badge-pill" style="margin-bottom: 0.25rem; font-size: 0.7rem; border-color: rgba(255,183,3,0.4); color: var(--accent-amber);">CCTV FEED #07 • PROXIMITY ALERT</span>
+              <h3 style="font-size: 1.25rem; font-weight: 700;">Warehouse Bay 8 — Forklift & AGV Danger Perimeter</h3>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber);">● AUTONOMOUS VEHICLE SYNC</span>
+          </div>
+
+          <div style="position: relative; border-radius: 12px; overflow: hidden; height: 480px; background: #000; box-shadow: 0 16px 36px -8px rgba(0,0,0,0.7);">
+            <img id="vid-2-img" src="assets/cctv_factory_2.jpg" alt="CCTV Warehouse Forklift" style="width: 100%; height: 100%; object-fit: cover;" />
+
+            <!-- CCTV Playback Bar Overlay -->
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(3,7,18,0.95) 0%, transparent 100%); padding: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="btn-cta" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" id="play-btn-2">
+                  ▶ Play Loop
+                </button>
+                <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber);" id="timecode-2">00:11:42 / 00:20:00</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <span style="background: rgba(255,183,3,0.15); border: 1px solid var(--accent-amber); color: var(--accent-amber); font-size: 0.75rem; font-family: var(--font-mono); padding: 4px 10px; border-radius: 6px;">
+                  FORKLIFT ID: FK-012 • ACTIVE PERIMETER
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>© 2026 VajraNetra — Autonomous Industrial AI Safety Command Center. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="functions/libs/three.min.js"></script>
+  <script type="module">
+    import { threeBackground } from "./functions/ui/ThreeBackground.js";
+    window.addEventListener("DOMContentLoaded", () => {
+      threeBackground.init();
+
+      // Play button simulation
+      let isPlaying1 = false;
+      const btn1 = document.getElementById("play-btn-1");
+      const tc1 = document.getElementById("timecode-1");
+      btn1?.addEventListener("click", () => {
+        isPlaying1 = !isPlaying1;
+        btn1.textContent = isPlaying1 ? "⏸ Pause" : "▶ Play Loop";
+      });
+
+      let isPlaying2 = false;
+      const btn2 = document.getElementById("play-btn-2");
+      btn2?.addEventListener("click", () => {
+        isPlaying2 = !isPlaying2;
+        btn2.textContent = isPlaying2 ? "⏸ Pause" : "▶ Play Loop";
+      });
+    });
+  </script>
+</body>
+</html>

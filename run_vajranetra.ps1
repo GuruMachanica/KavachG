@@ -1,8 +1,8 @@
-# KavachG 1-Click Launch Script (Windows PowerShell)
+# VajraNetra 1-Click Launch Script (Windows PowerShell)
 $ErrorActionPreference = "Stop"
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "   KAVACHG - INDUSTRIAL SAFETY COMMAND CENTER     " -ForegroundColor White
+Write-Host "  VAJRANETRA - INDUSTRIAL AI COMMAND CENTER       " -ForegroundColor White
 Write-Host "==================================================" -ForegroundColor Cyan
 
 $ROOT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -42,10 +42,11 @@ Write-Host "[+] Launching Command Center Frontend on http://127.0.0.1:5500..." -
 $frontendJob = Start-Process -FilePath $PYTHON -ArgumentList "-m", "http.server", "5500" -WorkingDirectory "$ROOT_DIR\Frontend" -PassThru
 
 Start-Sleep -Seconds 2
-Start-Process "http://127.0.0.1:5500"
+Start-Process "http://127.0.0.1:5500/landing.html"
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "KavachG Command Center is live!" -ForegroundColor Green
-Write-Host "Frontend: http://127.0.0.1:5500" -ForegroundColor White
+Write-Host "VajraNetra Command Center is live!" -ForegroundColor Green
+Write-Host "Landing:  http://127.0.0.1:5500/landing.html" -ForegroundColor White
+Write-Host "Console:  http://127.0.0.1:5500/index.html" -ForegroundColor White
 Write-Host "Backend:  http://127.0.0.1:8000 (Swagger: /docs)" -ForegroundColor White
 Write-Host "==================================================" -ForegroundColor Cyan
