@@ -30,26 +30,32 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1350px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
   position: relative;
   z-index: 1;
 }
 
-
-/* Header Navbar */
+/* Edge-to-Edge Full Width Header Navbar */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 0;
+  width: 100%;
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
   background: rgba(3, 7, 18, 0.85);
-  backdrop-filter: blur(12px);
-  z-index: 50;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 100;
+}
+
+.navbar-inner {
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 1.15rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .brand-wrapper {
@@ -59,6 +65,7 @@ body {
   text-decoration: none;
   color: #fff;
 }
+
 
 .brand-logo {
   height: 42px;
@@ -304,16 +311,25 @@ body {
   100% { transform: scale(0.9); opacity: 0.7; }
 }
 
-/* Enterprise Multi-Column Footer */
+/* Enterprise Multi-Column Footer (Edge-to-Edge Full Width) */
 footer {
+  width: 100%;
   margin-top: 5rem;
   border-top: 1px solid var(--border-subtle);
-  background: rgba(3, 7, 18, 0.75);
+  background: rgba(3, 7, 18, 0.85);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   padding: 4rem 0 2rem;
   position: relative;
   z-index: 10;
 }
+
+.footer-inner {
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
 
 .footer-grid {
   display: grid;
