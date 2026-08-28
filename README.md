@@ -11,10 +11,7 @@
 
 * **Live Production Portal:** [https://kavach-g.vercel.app](https://kavach-g.vercel.app)
 * **Live Safety Command Console:** [https://kavach-g.vercel.app/console](https://kavach-g.vercel.app/console)
-* **Live Backend Cloud API:** [https://kavachg.onrender.com](https://kavachg.onrender.com)
-* **Interactive Swagger API Docs:** [https://kavachg.onrender.com/docs](https://kavachg.onrender.com/docs)
 * **GitHub Repository:** [https://github.com/GuruMachanica/KavachG](https://github.com/GuruMachanica/KavachG)
-* **Deployment Guide:** [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
@@ -57,11 +54,11 @@ KavachG operates across three compute environments, enabling zero-cost cloud hos
 
 ```
 +----------------------------------------------------------------------------------------------------+
-| TIER 1: CLOUD GATEWAY (Render Free Hosting - $0.00/mo)                                             |
+| TIER 1: BACKEND API GATEWAY (Self-Hosted / Private Cluster)                                             |
 +----------------------------------------------------------------------------------------------------+
 |  • FastAPI REST APIs, WebSocket live incident streaming, SQLite WAL database                       |
 |  • Simulated optical CCTV surveillance stream with live timecode HUD                               |
-|  • URL: https://kavachg.onrender.com                                                               |
+|  • URL: http://localhost:8000                                                               |
 +----------------------------------------------------------------------------------------------------+
 
 +----------------------------------------------------------------------------------------------------+
@@ -77,7 +74,7 @@ KavachG operates across three compute environments, enabling zero-cost cloud hos
 +----------------------------------------------------------------------------------------------------+
 |  • Runs YOLOv8 models directly on user's GPU (NVIDIA CUDA / Apple Silicon MPS / DirectML)          |
 |  • Connects local camera streams and syncs incident telemetry to cloud in real time                |
-|  • Launch: python scripts/run_local_edge_agent.py --cloud-url https://kavachg.onrender.com          |
+|  • Launch: python scripts/run_local_edge_agent.py --cloud-url http://localhost:8000          |
 +----------------------------------------------------------------------------------------------------+
 ```
 

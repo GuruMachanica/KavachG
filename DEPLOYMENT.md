@@ -8,8 +8,6 @@ Comprehensive production deployment guide for **KavachG (कवच-G)** by **Tea
 
 * **Frontend Portal (Vercel):** [https://kavach-g.vercel.app](https://kavach-g.vercel.app)
 * **Safety Command Console:** [https://kavach-g.vercel.app/console](https://kavach-g.vercel.app/console)
-* **Backend Cloud Gateway (Render):** [https://kavachg.onrender.com](https://kavachg.onrender.com)
-* **Interactive API Swagger Docs:** [https://kavachg.onrender.com/docs](https://kavachg.onrender.com/docs)
 * **GitHub Repository:** [https://github.com/GuruMachanica/KavachG](https://github.com/GuruMachanica/KavachG)
 
 ---
@@ -66,7 +64,7 @@ KavachG includes a pre-configured **1-Click Render Blueprint** ([`render.yaml`](
 2. Set **Root Directory** to `Frontend` (or root, using root [`vercel.json`](vercel.json)).
 3. Framework Preset: `Other`.
 4. Click **Deploy**.
-5. The frontend automatically detects and routes all REST & WebSocket traffic to `https://kavachg.onrender.com`.
+5. The frontend automatically detects and routes all REST & WebSocket traffic to `http://localhost:8000`.
 
 ---
 
@@ -80,7 +78,7 @@ KavachG includes a pre-configured **1-Click Render Blueprint** ([`render.yaml`](
 ### Option 3: Local Edge Node Agent CLI
 * Accelerate YOLOv8 on your local NVIDIA RTX or Apple Silicon GPU:
 ```bash
-python scripts/run_local_edge_agent.py --cloud-url https://kavachg.onrender.com --camera 0 --mode ppe
+python scripts/run_local_edge_agent.py --cloud-url http://localhost:8000 --camera 0 --mode ppe
 ```
 * Telemetry and safety violations stream into the cloud dashboard in real time!
 
