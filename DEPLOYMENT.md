@@ -1,6 +1,6 @@
 # 🚀 KavachG (कवच-G) — Enterprise Cloud & Edge Deployment Guide
 
-Comprehensive production deployment guide for **KavachG (कवच-G)** by **Team IronLogic**.
+Comprehensive production deployment guide for **KavachG (कवच-G)** by **Team CodeGambit**.
 
 ---
 
@@ -88,15 +88,15 @@ python scripts/run_local_edge_agent.py --cloud-url http://localhost:8000 --camer
 
 | Account | Email | Password | Role |
 | :--- | :--- | :--- | :--- |
-| **Super-Admin** | `ironlogic.admin@kavachg.io` | `KavachG#Secured2026!IronLogic` | `Lead Security Architect (admin)` |
+| **Super-Admin** | `codegambit.admin@kavachg.io` | `KavachG#Secured2026!CodeGambit` | `Lead Security Architect (admin)` |
 
 ---
 
-## 👥 Team IronLogic Attribution
+## 👥 Team CodeGambit Attribution
 
 * 💻 **Mohammad Saad**: Frontend UI/UX, Command Console & 3D Metaverse Digital Twin.
 * ⚙️ **Mohnish Narayan Gupta**: Backend Microservices, Streaming & Security Architecture.
 * 🔍 **Ashutosh Mishra**: Computer Vision, YOLOv8 Custom Training & Pose Kinematics.
 * 🛡️ **Mohammad Huzaifa** (`GuruMachanica`): Deployment, CI/CD, Autonomous Swarm, Mistral LLM & Database Concurrency.
 
-**Contact:** `ironlogic@zohomail.in`
+**Contact:** `codegambit@zohomail.in`

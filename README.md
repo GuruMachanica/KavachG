@@ -225,7 +225,7 @@ uvicorn Backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-## Team IronLogic & Core Engineering Roles
+## Team CodeGambit & Core Engineering Roles
 
 | Engineer | Core Responsibilities & Contributions |
 | :--- | :--- |
@@ -238,4 +238,4 @@ uvicorn Backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 ## License
 
-Proprietary — All Rights Reserved © 2026 Team IronLogic.
+Proprietary — All Rights Reserved © 2026 Team CodeGambit.

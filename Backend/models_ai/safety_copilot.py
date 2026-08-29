@@ -132,7 +132,7 @@ def _query_mistral_llm(query: str, briefing: dict) -> str:
     try:
         url = "https://api.mistral.ai/v1/chat/completions"
         system_prompt = (
-            "You are the KavachG AI Safety Copilot by Team IronLogic. "
+            "You are the KavachG AI Safety Copilot by Team CodeGambit. "
             "You are an industrial safety intelligence assistant specializing in OSHA 1910 regulatory mandates, "
             "worker PPE compliance, skeletal fall kinematics, and chemical/thermal hazard mitigations. "
             f"Current plant posture: {briefing['safety_posture']} with {briefing['open_violations']} open incidents. "

@@ -125,10 +125,10 @@ def init_db():
         if not u_row or u_row["cnt"] == 0:
             from passlib.context import CryptContext
             pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-            default_admin_hash = pwd_ctx.hash("KavachG#Secured2026!IronLogic")
+            default_admin_hash = pwd_ctx.hash("KavachG#Secured2026!CodeGambit")
             c.execute(
                 "INSERT INTO users (id, name, email, password, role, verified) VALUES (?, ?, ?, ?, ?, ?)",
-                (1, "Lead Security Architect", "ironlogic.admin@kavachg.io", default_admin_hash, "admin", 1)
+                (1, "Lead Security Architect", "codegambit.admin@kavachg.io", default_admin_hash, "admin", 1)
             )
 
 
